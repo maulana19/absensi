@@ -23,18 +23,21 @@ def insertDataAbsen(file):
     data_karyawan = data.values.tolist()
     for data in data_karyawan:
         if data[0] not in [57,17,24,29,87,192,20]:
+            tanggal = data[1].split("/")
+            tanggal_fix = tanggal[2]+'-'+tanggal[1]+'-'+tanggal[0]
+
             cursor = db.cursor()
-            cursor.execute('SELECT * FROM absensi WHERE id_karyawan = '+str(data[0])+' AND tanggal = "' + str(datetime.strptime(data[1], '%d/%m/%Y')) +'"')
+            cursor.execute('SELECT * FROM absensi WHERE id_karyawan = '+str(data[0])+' AND tanggal = "' + tanggal_fix +'"')
 
             if cursor.fetchone() is None:
-                cursor.execute('INSERT INTO absensi VALUES ("","'+str(datetime.strptime(data[1], '%d/%m/%Y'))+'", "","", '+str(data[0])+')')
+                cursor.execute('INSERT INTO absensi VALUES ("","'+tanggal_fix+'", "","", '+str(data[0])+')')
                 db.commit()
 
             if data[3] == "Scan Masuk":
-                cursor.execute('UPDATE absensi SET jam_masuk = "'+str(data[2])+'" WHERE id_karyawan = '+str(data[0])+' AND tanggal = "'+str(datetime.strptime(data[1], '%d/%m/%Y'))+'"')
+                cursor.execute('UPDATE absensi SET jam_masuk = "'+str(data[2])+'" WHERE id_karyawan = '+str(data[0])+' AND tanggal = "'+tanggal_fix+'"')
                 db.commit()
             if data[3] == "Scan Keluar":
-                cursor.execute('UPDATE absensi SET jam_keluar = "'+str(data[2])+'" WHERE id_karyawan = '+str(data[0])+' AND tanggal = "'+str(datetime.strptime(data[1], '%d/%m/%Y'))+'"')
+                cursor.execute('UPDATE absensi SET jam_keluar = "'+str(data[2])+'" WHERE id_karyawan = '+str(data[0])+' AND tanggal = "'+tanggal_fix+'"')
                 db.commit()
 
 def insertIzinKaryawan(data):
@@ -84,5 +87,14 @@ def insertIzinJam(data):
 
 
     cur = db.cursor()
-    cur.execute("INSERT INTO izin_jam(tanggal, jam_mulai, jam_akhir, status, keterangan, id_karyawan, kode_izin_jam) VALUES ('"+str(data['tanggal'])+"', '"+str(data['jam_mulai'])+"', '"+str(data['jam_akhir'])+"', '"+str(data['izin'])+"', '"+str(data['keterangan'])+"', '"+str(id_karyawan)+"', '"+str(kode_izin)+"')")
+    cur.execute("INSERT INTO izin_jam(tanggal, jam_mulai, jam_akhir, status, keterangan, id_karyawan, kode_izin_jam, total_izin) VALUES ('"+str(data['tanggal'])+"', '"+str(data['jam_mulai'])+"', '"+str(data['jam_akhir'])+"', '"+str(data['izin'])+"', '"+str(data['keterangan'])+"', '"+str(id_karyawan)+"', '"+str(kode_izin)+"','"+str(data['total_jam'])+"')")
+    db.commit()
+
+
+def insertLembur(data):
+    split_karyawan = data['no_karyawan'].split('-')
+    id_karyawan = split_karyawan[0]
+
+    cur = db.cursor()
+    cur.execute("INSERT INTO lembur(tanggal, total_jam, id_karyawan) VALUES ('"+str(data["tanggal"])+"','"+str(data["total_jam"])+"','"+str(id_karyawan)+"')")
     db.commit()

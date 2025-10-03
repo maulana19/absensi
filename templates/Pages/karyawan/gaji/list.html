@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Gaji Karyawan</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
+</head>
+
+<body>
+    <nav class="navbar navbar-light bg-success">
+        <div class="container">
+            <div class="ms-auto me-0 mt-2">
+                <form action="cari-karyawan" method="get">
+                    <div class="input-group mb-2">
+                        <input type="text" class="form-control" name="key" placeholder="Cari Karyawan" aria-label="Example text with button addon" aria-describedby="button-addon1">
+                        <button class="btn btn-outline-light" type="submit" id="button-addon1"><b>Cari</b></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </nav>
+    <div class="container-fluid">
+        <div class="row">
+                <div class="col-md-12">
+                    <div class="card mt-2">
+                        <div class="ms-3 mt-2">
+                            <p><b>Daftar Gaji Karyawan </b></p>
+                        </div>
+                        <hr>
+                        <div class="card-body">
+                            <div class="table-responsive ">                                
+                            <table class="table table-hover table-bordered">
+                                <tbody>
+                                    <tr>
+                                        <th scope="col">#</th>
+                                        <th scope="col">NIK</th>
+                                        <th scope="col">Nama</th>
+                                        <th scope="col"><center>Jml Hari Kerja</center></th>
+                                        <th scope="col"><center>IZIN</center></th>
+                                        <th scope="col"><center>CUTI</center></th>
+                                        <th scope="col"><center>SAKIT</center></th>
+                                        <th scope="col"><center>IZIN KHUSUS</center></th>
+                                        <th scope="col"><center>ALPHA</center></th>
+                                        <th scope="col"><center>IZIN PERJAM</center></th>
+                                        <th scope="col"><center>UPAH POKOK</center></th>
+                                        <th scope="col"><center>TUNJANGAN JABATAN</center></th>
+                                        <th scope="col"><center>TUNJANGAN KEAHLIAN</center></th>
+                                        <th scope="col"><center>TUNJANGAN LAIN</center></th>
+                                        <th scope="col"><center>UPAH TOTAL</center></th>
+                                        <th scope="col"><center>LEMBUR</center></th>
+                                        <th scope="col"><center>BONUS</center></th>
+                                        <th scope="col"><center>GAJI KOTOR</center></th>
+                                        <th scope="col"><center>POT. IZIN</center></th>
+                                        <th scope="col"><center>POT. IZIN PERJAM</center></th>
+                                        <th scope="col"><center>POT. PINJAMAN</center></th>
+                                        <th scope="col"><center>POT. PAJAK</center></th>
+                                        <th scope="col"><center>TAMBAHAN KOMPLAIN</center></th>
+                                        <th scope="col"><center>GAJI BERSIH</center></th>
+                                    </tr>
+                                    {% if data %}
+
+                                        {% for item in data %}
+                                            <tr>
+                                                <td>{{ loop.index }}</td>
+                                                <td>{{ item[1] }}</td>
+                                                <td>{{ item[2] }}</td>
+                                                <td><center>{{ item[3] }}</center></td>
+                                                <td><center>{{ item[5] }}</center></td>
+                                                <td><center>{{ item[6] }}</center></td>
+                                                <td><center>{{ item[7] }}</center></td>
+                                                <td><center>{{ item[8] }}</center></td>
+                                                <td><center>{{ item[9] }}</center></td>
+                                                <td><center>{{ item[4] }}</center></td>
+                                            </tr>
+                                        {% endfor %}
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q"
+        crossorigin="anonymous"></script>
+</body>
+
+</html>

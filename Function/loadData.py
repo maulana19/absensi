@@ -247,7 +247,7 @@ def getDataIzinJam():
 
 def getDataIziJamById(id):
     cur = db.cursor()
-    cur.execute("SELECT izin_jam.tanggal,izin_jam.jam_mulai,izin_jam.jam_akhir,izin_jam.status,izin_jam.keterangan,izin_jam.kode_izin_jam,izin_jam.tanggal, karyawan.nik, karyawan.nama FROM izin_jam JOIN karyawan ON izin_jam.id_karyawan = karyawan.nik WHERE kode_izin_jam = '"+id+"' limit 1")
+    cur.execute("SELECT izin_jam.tanggal,izin_jam.jam_mulai,izin_jam.jam_akhir,izin_jam.status,izin_jam.keterangan,izin_jam.kode_izin_jam,izin_jam.total_izin, karyawan.nik, karyawan.nama FROM izin_jam JOIN karyawan ON izin_jam.id_karyawan = karyawan.nik WHERE kode_izin_jam = '"+id+"' limit 1")
     data = cur.fetchone()
     return data
 
@@ -256,3 +256,61 @@ def searchDataIzinJam(id):
     cur.execute("SELECT izin_jam.tanggal,izin_jam.jam_mulai,izin_jam.jam_akhir,izin_jam.status,izin_jam.keterangan,izin_jam.kode_izin_jam,izin_jam.tanggal, karyawan.nama FROM izin_jam JOIN karyawan ON izin_jam.id_karyawan = karyawan.nik WHERE nama LIKE '%"+id+"%'")
     data = cur.fetchall()
     return data
+
+def getDataLembur():
+    cur = db.cursor()
+    cur.execute("SELECT lembur.*, karyawan.nama FROM lembur JOIN karyawan on lembur.id_karyawan = karyawan.nik")
+    data = cur.fetchall()
+    return data
+
+def searchDataAbsenByDateAndNIK(nik, tanggal):
+    cur = db.cursor()
+    cur.execute("SELECT karyawan.id FROM karyawan where nik = '"+nik+"' limit 1")
+    id_karyawan = cur.fetchone()[0]
+
+    cur.execute("SELECT * FROM absensi JOIN karyawan ON absensi.id_karyawan = karyawan.id where id_karyawan = "+str(id_karyawan)+" AND absensi.tanggal = '"+tanggal+"'")
+    data_karyawan = cur.fetchall()
+    return data_karyawan
+
+def hitungHariKerja(karyawan):
+    tanggal = getHeaderAbsen()
+    data_libur = getDataLibur()
+    tanggal_libur = []
+    for l in data_libur:
+        tanggal_libur.append(l[1])
+
+    harikerja = 0
+    for t in tanggal:
+        cur = db.cursor()
+        cur.execute("SELECT * FROM absensi WHERE tanggal = '"+t.strftime('%Y-%m-%d')+"' AND id_karyawan = "+ str(karyawan) +" LIMIT 1")
+        res = cur.fetchone()
+        if res:
+            if res[1] not in tanggal_libur:
+                harikerja+=1
+    return harikerja
+
+def hitungHariTidakKerja(id, izin):
+    tanggal = getHeaderAbsen()
+
+    totalizin = 0
+    for t in tanggal:
+        cur = db.cursor()
+        cur.execute("SELECT * FROM IZIN WHERE tanggal = '"+t.strftime('%Y-%m-%d')+"' AND id_karyawan = '"+ str(id) +"' AND status = '"+str(izin)+"' LIMIT 1")
+        res = cur.fetchone()
+        if res and res[2] == izin:
+            totalizin += 1
+    return totalizin
+
+def hitungIzinJam(id):
+    tanggal = getHeaderAbsen()
+    izinjam = 0
+    for t in tanggal:
+        cur = db.cursor()
+        print("SELECT * FROM izin_jam where tanggal = '"+t.strftime('%Y-%m-%d')+"' AND id_karyawan = '"+ str(id) +"'")
+        cur.execute("SELECT * FROM izin_jam where tanggal = '"+t.strftime('%Y-%m-%d')+"' AND id_karyawan = '"+ str(id) +"'")
+        res = cur.fetchone()
+        if res:
+            print(res[8])
+            izinjam += int(res[8])
+    return izinjam
+            

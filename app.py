@@ -3,11 +3,11 @@ import pandas as pd
 import os
 
 from Databases.connect import db
-from Function.loadData import getDataAbsen, getDataIzin, getDataIzinJam, searchDataIzinJam, getDataIziJamById, getDataIzinByIDAndTanggal, searchDataAbsenTable,searchDataLibur, searchDataIzin , getDataJadwal,getHeaderAbsen, getDataLibur , getDataAbsenTable, searchDataAbsen, getDataKaryawan, searchDataKaryawan, searchDataKaryawanID, getDataLiburById
+from Function.loadData import *
 from Function.DataKaryawan import getNamaKaryawan, insertJadwal, updateKaryawan
 import locale
-from Function.tambahData import insertLibur, insertIzinJam, insertDataAbsen, insertIzinKaryawan
-from Function.hapusData import deleteLibur,deleteIzin, deleteIzinJam
+from Function.tambahData import insertLibur, insertIzinJam, insertDataAbsen, insertIzinKaryawan, insertLembur
+from Function.hapusData import deleteLibur,deleteIzin, deleteIzinJam, deleteLembur
 from Function.convertData import changeFormatDate
 from Function.updateData import updateIzin, updateLibur, updateIzinJam
 
@@ -34,7 +34,7 @@ def tambah_absen():
         file_path = os.path.join('data',file.filename)
         file_xls.to_csv(file_path,sep=";", index= None, header= True)
         
-        getNamaKaryawan(file_path)
+        # getNamaKaryawan(file_path)
         insertDataAbsen(file_path)
         return redirect('/')
 
@@ -261,6 +261,8 @@ def ubahJamIzin(id):
             updateIzinJam(request.form['jam_mulai'],'jam_mulai',id)
         if request.form['jam_akhir'] != '':
             updateIzinJam(request.form['jam_akhir'],'jam_akhir',id)
+        if request.form['total_jam'] != '':
+            updateIzinJam(request.form['total_jam'],'total_izin',id)
         if request.form['keterangan'] != '':
             updateIzinJam(request.form['keterangan'],'keterangan',id)
     return redirect('/izin-jam')
@@ -272,4 +274,54 @@ def cariIzinJam():
         return redirect('/izin-jam')
     data_search = searchDataIzinJam(search_key)
     return render_template("Pages/absen/izin-jam/list.html", data = data_search)
+
+@app.route('/lembur')
+def daftarLembur():
+    data_lembur = getDataLembur()
+    data_karyawan = getDataKaryawan()
+    print(data_lembur)
+    return render_template("Pages/absen/lembur/list.html", data = data_lembur, karyawan = data_karyawan)
+
+@app.route('/tambah-lembur', methods =['GET', 'POST'])
+def tambahLembur():
+    if request.method == 'GET':
+        split_karyawan = request.args.get('no_karyawan').split('-')
+        id_karyawan = split_karyawan[0]
+        data = searchDataAbsenByDateAndNIK(id_karyawan, request.args.get('tanggal'))
+        return render_template('Pages/absen/lembur/add.html', data_absen = data, data_karyawan =[request.args.get('no_karyawan'), request.args.get('tanggal')])
+    if request.method == 'POST':
+        insertLembur(request.form)
+        return redirect('/lembur')
+
+@app.route('/hapus-lembur/<id>', methods=["GET"])
+def hapusLembur(id):
+    deleteLembur(id)
+    return redirect('/lembur')
+
+
+@app.route('/gaji-karyawan', methods=['GET'])
+def gajikaryawan():
+    data = []
+    data_karyawan = getDataKaryawan()
+    
+    tanggal = getHeaderAbsen()
+    if data_karyawan:
+        for d in data_karyawan:
+            totalharikerja = hitungHariKerja(d[0])
+            totalhariizin = hitungHariTidakKerja(d[1], "I")
+            totalharicuti = hitungHariTidakKerja(d[1], "C")
+            totalharisakit = hitungHariTidakKerja(d[1], "S")
+            totalhariizinkhusus = hitungHariTidakKerja(d[1], "IK")
+            totalharialpha = len(tanggal) - totalharikerja - totalhariizin - totalharicuti - totalharisakit - totalhariizinkhusus
+
+
+            totalizinperjam = hitungIzinJam(d[1])
+            data.append([d[0],d[1], d[2], totalharikerja, totalizinperjam, totalhariizin, totalharicuti, totalharisakit, totalhariizinkhusus, totalharialpha])
+    return render_template('Pages/karyawan/gaji/list.html', data = data)
+
+@app.route('/ubah-gaji/<id>')
+def ubahGaji(id):
+    return render_template('Pages/karyawan/gaji/edit.html')
+
+
 app.run(port=5000, debug=True)

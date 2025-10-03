@@ -14,3 +14,8 @@ def deleteIzinJam(id):
     cursor = db.cursor()
     cursor.execute("DELETE FROM izin_jam where kode_izin_jam = '"+str(id)+"'")
     db.commit()
+
+def deleteLembur(id):
+    cursor = db.cursor()
+    cursor.execute("DELETE FROM lembur where id = '"+str(id)+"'")
+    db.commit()
