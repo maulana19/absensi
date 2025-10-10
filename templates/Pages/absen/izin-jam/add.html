@@ -1,20 +1,28 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Halaman Tambah Izin (PERJAM)</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
-</head>
-<body>
-    <div class="container-fluid">
+{% extends "base.html" %}
+{% block title %}
+    Tambah Izin Karyawan (Jam)
+{% endblock %}
+
+{% block navbar %}
+    <nav class="navbar navbar-light bg-success">
+        <a class="ms-3" style="text-decoration: none;color: white;font-weight: bold;" data-bs-toggle="offcanvas"
+            href="#offcanvasExample" role="button" aria-controls="offcanvasExample">
+            MENU
+        </a>
+    </nav>
+{% endblock %}
+
+{% block content %}
+
         <div class="card mt-3">
-            <br>
-            <div class="ms-3 mt-1">
-                <p><b>Tambah Izin Karyawan <div style="font-weight: bolder;">(PERJAM)</div></b></p>
+            <div class="card-header">
+                <div class="row">
+                    <div class="col-md-9 pt-2">
+                        <h4 class="mt-2" style="line-height: 0.4;"><b>Tambah Izin Karyawan (PERJAM)</b></h4>
+                        <h6 style="color: rgb(73, 73, 73);">&nbsp Silahkan lengkapi data berikut untuk menambah Izin Jam karyawan</h6>
+                    </div>
+                </div>
             </div>
-            <hr>
             <form action="/tambah-izin-jam" method="post" class="ms-3 mb-3">
                 <div class="row pe-3">
                     <div class="col-md-4">
@@ -71,11 +79,4 @@
                 </div>
             </form>
         </div>
-    </div>
-
-    
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q"
-        crossorigin="anonymous"></script>
-</body>
-</html>
+{% endblock %}

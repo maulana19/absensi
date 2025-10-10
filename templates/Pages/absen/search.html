@@ -1,86 +1,94 @@
-<!doctype html>
-<html lang="en">
+{% extends "base.html" %}
 
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Pencarian Data Absen Karyawan</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
-</head>
+{% block title %}
+    Cari Jam Absensi
+{% endblock %}
 
-<body>
-    <nav class="navbar navbar-light bg-success">
+{% block navbar %}
+    <nav class="navbar navbar-light bg-success" style="position: sticky;">
+        <a class="ms-3" style="text-decoration: none;color: white;font-weight: bold;" data-bs-toggle="offcanvas"
+            href="#offcanvasExample" role="button" aria-controls="offcanvasExample">
+            MENU
+        </a>
         <div class="container">
+
             <div class="ms-auto me-0 mt-2">
-                <form action="cari-absen" method="get">
+                <form action="cari-jam_absen" method="get">
                     <div class="input-group mb-2">
-                        <input type="text" class="form-control" name="key" placeholder="Cari Karyawan" aria-label="Example text with button addon" aria-describedby="button-addon1">
+                        <input type="text" class="form-control" name="key" placeholder="Cari Jam Absen"
+                            aria-label="Example text with button addon" aria-describedby="button-addon1">
                         <button class="btn btn-outline-light" type="submit" id="button-addon1"><b>Cari</b></button>
                     </div>
                 </form>
             </div>
         </div>
+
     </nav>
-    <div class="container-fluid">
-        <div class="row">
-            {% for item in data %}
-                <div class="col-md-12">
-                    <div class="card mt-2">
-                        <div class="ms-3 mt-2">
-                            <p><b>NAMA : {{ item[0][5] }}</b></p>
-                        </div>
-                        <hr>
-                        <div class="ms-3">
-                            <p>Absen</p>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                
-                            <table class="table">
-                                <tbody>
-                                    
-                                    <tr>
-                                        <th scope="col">Hari</th>
-                                        
-                                        {% for detail in item %}
-                                            <td><center>{{ detail[6] }}</center></td>
-                                        {% endfor %}
-                                    </tr>
-                                    <tr>
-                                        <th scope="col">Tanggal</th>
-                                        
-                                        {% for detail in item %}
-                                            <td><center>{{ detail[1] }}</center></td>
-                                        {% endfor %}
-                                    </tr>
-                                    <tr>
-                                        <th scope="col">Jam Masuk</th>
-                                        {% for detail in item %}
-                                            <td><center>{{ detail[2] }}</center></td>
-                                        {% endfor %}
-                                    </tr>
-                                    <tr>
-                                        <th scope="col">Jam Keluar</th>
-                                        
-                                        {% for detail in item %}
-                                            <td><center>{{ detail[3] }}</center></td>
-                                        {% endfor %}
-                                    </tr>
-                                    <tr>
-                                    </tr>
-                                </tbody>
-                            </table>
-                            </div>
-                        </div>
+{% endblock %}
+
+
+{% block content %}
+    <div class="row">
+        {% for item in data %}
+        <div class="col-md-12">
+            <div class="card mt-2">
+                <div class="ms-3 mt-2">
+                    <p><b>NAMA : {{ item[0][5] }}</b></p>
+                </div>
+                <hr>
+                <div class="ms-3">
+                    <p>Absen</p>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+
+                        <table class="table">
+                            <tbody>
+
+                                <tr>
+                                    <th scope="col">Hari</th>
+
+                                    {% for detail in item %}
+                                    <td>
+                                        <center>{{ detail[6] }}</center>
+                                    </td>
+                                    {% endfor %}
+                                </tr>
+                                <tr>
+                                    <th scope="col">Tanggal</th>
+
+                                    {% for detail in item %}
+                                    <td>
+                                        <center>{{ detail[1] }}</center>
+                                    </td>
+                                    {% endfor %}
+                                </tr>
+                                <tr>
+                                    <th scope="col">Jam Masuk</th>
+                                    {% for detail in item %}
+                                    <td>
+                                        <center>{{ detail[2] }}</center>
+                                    </td>
+                                    {% endfor %}
+                                </tr>
+                                <tr>
+                                    <th scope="col">Jam Keluar</th>
+
+                                    {% for detail in item %}
+                                    <td>
+                                        <center>{{ detail[3] }}</center>
+                                    </td>
+                                    {% endfor %}
+                                </tr>
+                                <tr>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-            {% endfor %}
+            </div>
         </div>
+        {% endfor %}
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q"
-        crossorigin="anonymous"></script>
-</body>
 
-</html>
+{% endblock %}

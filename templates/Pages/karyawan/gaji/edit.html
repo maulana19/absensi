@@ -15,7 +15,7 @@
                 <p><b>Ubah Gaji Karyawan</b></p>
             </div>
             <hr>
-            <form action="/tambah-libur" method="post" class="ms-3 mb-3">
+            <form action="/ubah-gaji/{{ kode }}" method="post" class="ms-3 mb-3">
                 <div>
                     <p>
                         <b>Detail Karyawan</b>
@@ -24,20 +24,20 @@
                 <div class="row pe-3">
                     <div class="col-md-4">
                         <h6><b>NIK</b></h6>
-                        <input type="text" class="form-control" value="UIWK11" disabled>
+                        <input type="text" class="form-control" value="{{ data[1] }}" disabled>
                     </div>
                     <div class="col-md-4">
                         <div>
                             <h6><b>NAMA</b></h6>
-                            <input type="text" class="form-control" value="Pengguna 1" disabled>
+                            <input type="text" class="form-control" value="{{ data[2] }}" disabled>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <!-- <div class="col-md-4">
                         <div>
                             <h6><b>JAM KERJA</b></h6>
-                            <input type="text" class="form-control" value="Jam Kerja Normal" disabled>
+                            <input type="text" class="form-control" value="{{ 'Jam Kerja Normal' if data[3] == 1  else 'Jam Kerja Shift' }}" disabled>
                         </div>
-                    </div>
+                    </div> -->
                     
                     <div class="col-md-12 mt-4 b-2">
                         <p><b>Gaji Karyawan</b></p>
@@ -46,25 +46,25 @@
                     <div class="col-md-6">
                         <div>
                             <h6><b>Gaji Pokok</b></h6>
-                            <input type="number" class="form-control" value="0">
+                            <input type="number" name="gaji_pokok" class="form-control" value="{{ data[4] }}">
                         </div>
                     </div>
                     <div class="col-md-6 mb-3">
                         <div>
                             <h6><b>Tunjangan Keahlian</b></h6>
-                            <input type="number" class="form-control" value="0">
+                            <input type="number" name="t_keahlian" class="form-control" value="{{ data[5] }}">
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div>
                             <h6><b>Tunjangan Jabatan</b></h6>
-                            <input type="number" class="form-control" value="0">
+                            <input type="number" name="t_jabatan" class="form-control" value="{{ data[6] }}">
                         </div>
                     </div>
                     <div class="col-md-6 mb-3">
                         <div>
                             <h6><b>Tunjangan Lain</b></h6>
-                            <input type="number" class="form-control" value="0">
+                            <input type="number" name="t_lain" class="form-control" value="{{ data[7] }}">
                         </div>
                     </div>
                     <div class="col-md-12 mt-8">

@@ -17,5 +17,27 @@ def deleteIzinJam(id):
 
 def deleteLembur(id):
     cursor = db.cursor()
-    cursor.execute("DELETE FROM lembur where id = '"+str(id)+"'")
+    cursor.execute("DELETE FROM lembur where kode_lembur = '"+str(id)+"'")
+    db.commit()
+
+def deletePinjamanPajak(id):
+    cur = db.cursor()
+    cur.execute("DELETE FROM pinjaman_pajak WHERE kode_potongan_lain = '"+str(id)+"'")
+    db.commit()
+
+def deleteKomplain(id):
+    cur = db.cursor()
+    cur.execute("DELETE FROM komplain WHERE kode_komplain = '"+str(id)+"'")
+    db.commit()
+def deleteKaryawan(id):
+    cur = db.cursor()
+    cur.execute("DELETE FROM komplain WHERE id_karyawan = '"+str(id)+"'")
+    cur.execute("DELETE FROM jadwal_shift WHERE id_karyawan = '"+str(id)+"'")
+    cur.execute("DELETE FROM pinjaman_pajak WHERE id_karyawan = '"+str(id)+"'")
+    cur.execute("DELETE FROM lembur WHERE id_karyawan = '"+str(id)+"'")
+    cur.execute("DELETE FROM izin WHERE id_karyawan = '"+str(id)+"'")
+    cur.execute("DELETE FROM izin_jam WHERE id_karyawan = '"+str(id)+"'")
+    cur.execute("DELETE FROM insentif WHERE id_karyawan = '"+str(id)+"'")
+    cur.execute("DELETE FROM absensi WHERE id_karyawan = '"+str(id)+"'")
+    cur.execute("DELETE FROM karyawan WHERE nik = '"+str(id)+"'")
     db.commit()

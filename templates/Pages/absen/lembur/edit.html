@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}
+    Tambah Data Lembur
+{% endblock %}
+
+
+{% block navbar %}
+<nav class="navbar navbar-light bg-success" style="position: sticky;">
+    <a class="ms-3" style="text-decoration: none;color: white;font-weight: bold;" data-bs-toggle="offcanvas"
+        href="#offcanvasExample" role="button" aria-controls="offcanvasExample">
+        MENU
+    </a>
+</nav>
+{% endblock %} 
+
+
+{% block content %}
+        <div class="card mt-3">
+        <div class="card-header">
+            <h4 class="mt-2" style="line-height: 0.4;"><b>Ubah Lembur Karyawan</b></h4>
+            <h6 style="color: rgb(73, 73, 73);">&nbsp Silahkan lengkapi data berikut untuk mengubah lemburan karyawan</h6>
+        </div>
+            <form action="/ubah-lembur/{{ data_karyawan[4] }}" method="post" class="ms-3 mb-3">
+                <div class="row pe-3">
+                    <div class="col-md-4">
+                        <div>
+                            <h6><b>Karyawan</b></h6>
+                            <input type="text" readonly value="{{data_karyawan[5]}}" name="no_karyawan" class="form-control" placeholder="Silahkan Pilih Karyawan yang Izin">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div>
+                            <h6><b>Tanggal</b></h6>
+                            <input type="text" readonly name="tanggal" value="{{ data_karyawan[1] }}" class="form-control" id="">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div>
+                            <h6><b>Total Lembur</b></h6>
+                            <input type="number" name="total_jam" value="{{ data_karyawan[2] }}" placeholder="Silahkan Isi Total Jam Lembur Karyawan" step="any" class="form-control" id="">
+                        </div>
+                    </div>
+                    <div class="col-md-4 mt-4">
+                        <h6><b>Data Absen Karyawan</b></h6>
+                        <div class="table-responsive">
+                            <table class="table  table-bordered">
+                                <thead>
+                                    <tr>
+                                        <td><center>Jam Masuk</center></td>
+                                        <td><center>Jam Keluar</center></td>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                        <tr>
+                                            <td>{{ data_karyawan[6] }}</td>
+                                            <td>{{ data_karyawan[7] }}</td>
+                                        </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="col-md-12 mt-4">
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-success" type="submit">Simpan</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+{% endblock %} 

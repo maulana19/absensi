@@ -35,36 +35,38 @@
                             <table class="table table-hover table-bordered">
                                 <tbody>
                                     <tr>
-                                        <th scope="col">#</th>
-                                        <th scope="col">NIK</th>
-                                        <th scope="col">Nama</th>
-                                        <th scope="col"><center>Jml Hari Kerja</center></th>
-                                        <th scope="col"><center>IZIN</center></th>
-                                        <th scope="col"><center>CUTI</center></th>
-                                        <th scope="col"><center>SAKIT</center></th>
-                                        <th scope="col"><center>IZIN KHUSUS</center></th>
-                                        <th scope="col"><center>ALPHA</center></th>
-                                        <th scope="col"><center>IZIN PERJAM</center></th>
-                                        <th scope="col"><center>UPAH POKOK</center></th>
-                                        <th scope="col"><center>TUNJANGAN JABATAN</center></th>
-                                        <th scope="col"><center>TUNJANGAN KEAHLIAN</center></th>
-                                        <th scope="col"><center>TUNJANGAN LAIN</center></th>
-                                        <th scope="col"><center>UPAH TOTAL</center></th>
-                                        <th scope="col"><center>LEMBUR</center></th>
-                                        <th scope="col"><center>BONUS</center></th>
-                                        <th scope="col"><center>GAJI KOTOR</center></th>
-                                        <th scope="col"><center>POT. IZIN</center></th>
-                                        <th scope="col"><center>POT. IZIN PERJAM</center></th>
-                                        <th scope="col"><center>POT. PINJAMAN</center></th>
-                                        <th scope="col"><center>POT. PAJAK</center></th>
-                                        <th scope="col"><center>TAMBAHAN KOMPLAIN</center></th>
-                                        <th scope="col"><center>GAJI BERSIH</center></th>
+                                        <th scope="col" style="vertical-align: middle;"><center>#</center></th>
+                                        <th scope="col" style="vertical-align: middle;"><center>NIK</center></th>
+                                        <th scope="col" style="min-width: 250px;vertical-align: middle;"><center>Nama</center></th>
+                                        <th scope="col" style="vertical-align: middle;"><center>Jml Hari Kerja</center></th>
+                                        <th scope="col" style="vertical-align: middle;"><center>IZIN</center></th>
+                                        <th scope="col" style="vertical-align: middle;"><center>CUTI</center></th>
+                                        <th scope="col" style="vertical-align: middle;"><center>SAKIT</center></th>
+                                        <th scope="col" style="vertical-align: middle;"><center>IZIN KHUSUS</center></th>
+                                        <th scope="col" style="vertical-align: middle;"><center>ALPHA</center></th>
+                                        <th scope="col" style="vertical-align: middle;"><center>IZIN PERJAM</center></th>
+                                        <th scope="col" style="min-width: 100px; vertical-align: middle;"><center>UPAH POKOK</center></th>
+                                        <th scope="col" style="vertical-align: middle;"><center>TUNJANGAN JABATAN</center></th>
+                                        <th scope="col" style="vertical-align: middle;"><center>TUNJANGAN KEAHLIAN</center></th>
+                                        <th scope="col" style="vertical-align: middle;"><center>TUNJANGAN LAIN</center></th>
+                                        <th scope="col" style="vertical-align: middle;"><center>UPAH TOTAL</center></th>
+                                        <th scope="col" style="vertical-align: middle;"><center>LEMBUR</center></th>
+                                        <th scope="col" style="vertical-align: middle;"><center>INSENTIF</center></th>
+                                        <th scope="col" style="vertical-align: middle;"><center>GAJI KOTOR</center></th>
+                                        <th scope="col" style="vertical-align: middle;"><center>POT. BPJS TK</center></th>
+                                        <th scope="col" style="vertical-align: middle;"><center>POT. BPJS KES</center></th>
+                                        <th scope="col" style="vertical-align: middle;"><center>POT. IZIN</center></th>
+                                        <th scope="col" style="vertical-align: middle;"><center>POT. IZIN PERJAM</center></th>
+                                        <th scope="col" style="vertical-align: middle;"><center>POT. PINJAMAN</center></th>
+                                        <th scope="col" style="vertical-align: middle;"><center>POT. PAJAK</center></th>
+                                        <th scope="col" style="vertical-align: middle;"><center>TAMBAHAN KOMPLAIN</center></th>
+                                        <th scope="col" style="vertical-align: middle;"><center>GAJI BERSIH</center></th>
                                     </tr>
                                     {% if data %}
 
                                         {% for item in data %}
                                             <tr>
-                                                <td>{{ loop.index }}</td>
+                                                <td><center>{{ loop.index }}</center></td>
                                                 <td>{{ item[1] }}</td>
                                                 <td>{{ item[2] }}</td>
                                                 <td><center>{{ item[3] }}</center></td>
@@ -74,6 +76,22 @@
                                                 <td><center>{{ item[8] }}</center></td>
                                                 <td><center>{{ item[9] }}</center></td>
                                                 <td><center>{{ item[4] }}</center></td>
+                                                <td style="min-width: 200px;">{{ item[10] }}</td>
+                                                <td style="min-width: 200px;">{{ item[11] }}</td>
+                                                <td style="min-width: 200px;">{{ item[12] }}</td>
+                                                <td style="min-width: 200px;">{{ item[13] }}</td>
+                                                <td style="min-width: 200px;">{{ item[14] }}</td>
+                                                <td style="min-width: 200px;">{{ item[15] }}</td>
+                                                <td style="min-width: 200px;">{{ item[16] }}</td>
+                                                <td style="min-width: 200px;">{{ item[17] }}</td>
+                                                <td></td>
+                                                <td></td>
+                                                <td style="min-width: 200px;">{{ item[18] }}</td>
+                                                <td style="min-width: 200px;">{{ item[19] }}</td>
+                                                <td style="min-width: 200px;">{{ item[20] }}</td>
+                                                <td style="min-width: 200px;">{{ item[21] }}</td>
+                                                <td style="min-width: 200px;">{{ item[22] }}</td>
+                                                <td style="min-width: 200px;">{{ item[23] }}</td>
                                             </tr>
                                         {% endfor %}
                                     {% endif %}

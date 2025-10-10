@@ -1,3 +1,4 @@
+import locale
 from Databases.connect import db
 from datetime import datetime, date
 import pandas as pd
@@ -12,15 +13,16 @@ def getDataAbsen():
     date_obj = date.today()
 
     # Move to next month and set day to 10
-    start_period = datetime.strftime((date_obj - relativedelta(months=1)).replace(day=26), "%Y-%m-%d")
-    # start_period = "01/07/2025"
-    end_period = datetime.strftime((date_obj + relativedelta(months=1)).replace(day=25), "%Y-%m-%d")
-    # end_period = "10/07/2025"
+    if int(datetime.strftime(date_obj, "%d"))>=26:
+        start_period = datetime.strftime(date_obj.replace(day=26), "%Y-%m-%d")
+    else:
+        start_period = datetime.strftime((date_obj - relativedelta(months=1)).replace(day=26), "%Y-%m-%d")
+    
+    end_period = datetime.strftime(date_obj.replace(day=25), "%Y-%m-%d")
     
     cursor = db.cursor()
-    cursor.execute("SELECT absensi.*, karyawan.nama FROM absensi JOIN karyawan ON absensi.id_karyawan = karyawan.id WHERE tanggal BETWEEN '"+str(start_period)+"' AND '"+str(end_period)+"' ORDER BY karyawan.nama ASC")
+    cursor.execute("SELECT absensi.*, karyawan.nama FROM absensi JOIN karyawan ON absensi.id_karyawan = karyawan.nik WHERE tanggal BETWEEN '"+str(start_period)+"' AND '"+str(end_period)+"' ORDER BY karyawan.nama ASC")
     res = cursor.fetchall()
-    
     for item in res:
         name = item[-1]
         date_obj = datetime.strptime(str(item[1]), "%Y-%m-%d").strftime("%A")
@@ -45,7 +47,7 @@ def searchDataAbsen(key):
     # end_period = "10/07/2025"    
     
     cursor = db.cursor()
-    cursor.execute("SELECT absensi.*, karyawan.nama FROM absensi JOIN karyawan ON absensi.id_karyawan = karyawan.id WHERE karyawan.nama LIKE '%"+key+"%' AND tanggal BETWEEN '"+str(start_period)+"' AND '"+str(end_period)+"' ORDER BY karyawan.nama ASC")
+    cursor.execute("SELECT absensi.*, karyawan.nama FROM absensi JOIN karyawan ON absensi.id_karyawan = karyawan.nik WHERE karyawan.nama LIKE '%"+key+"%' AND tanggal BETWEEN '"+str(start_period)+"' AND '"+str(end_period)+"' ORDER BY karyawan.nama ASC")
     res = cursor.fetchall()
 
     for item in res:
@@ -130,7 +132,7 @@ def getDataAbsenTable(tanggal):
                     d.append(res2[2])
                 else:
                     cursor3 = db.cursor()
-                    cursor3.execute("SELECT * FROM absensi WHERE id_karyawan = '"+str(d[0])+"' AND tanggal = '"+str(t)+"'")
+                    cursor3.execute("SELECT * FROM absensi WHERE id_karyawan = '"+str(d[2])+"' AND tanggal = '"+str(t)+"'")
                     res3 = cursor3.fetchone()
                     if res3:
                         d.append('1')
@@ -230,7 +232,7 @@ def searchDataAbsenTable(key, tanggal):
                     d.append(res2[2])
                 else:
                     cursor3 = db.cursor()
-                    cursor3.execute("SELECT * FROM absensi WHERE id_karyawan = '"+str(d[0])+"' AND tanggal = '"+str(t)+"'")
+                    cursor3.execute("SELECT * FROM absensi WHERE id_karyawan = '"+str(d[2])+"' AND tanggal = '"+str(t)+"'")
                     res3 = cursor3.fetchone()
                     if res3:
                         d.append('1')
@@ -263,12 +265,16 @@ def getDataLembur():
     data = cur.fetchall()
     return data
 
+
+def searchDataLemburById(id):
+    cur = db.cursor()
+    cur.execute("SELECT lembur.*, karyawan.nama, absensi.jam_masuk, absensi.jam_keluar FROM lembur JOIN karyawan on lembur.id_karyawan = karyawan.nik JOIN absensi on lembur.id_karyawan = absensi.id_karyawan where kode_lembur = '"+id+"' and absensi.tanggal = lembur.tanggal limit 1")
+    data = cur.fetchone()
+    return data
+
 def searchDataAbsenByDateAndNIK(nik, tanggal):
     cur = db.cursor()
-    cur.execute("SELECT karyawan.id FROM karyawan where nik = '"+nik+"' limit 1")
-    id_karyawan = cur.fetchone()[0]
-
-    cur.execute("SELECT * FROM absensi JOIN karyawan ON absensi.id_karyawan = karyawan.id where id_karyawan = "+str(id_karyawan)+" AND absensi.tanggal = '"+tanggal+"'")
+    cur.execute("SELECT * FROM absensi JOIN karyawan ON absensi.id_karyawan = karyawan.nik where id_karyawan = '"+str(nik)+"' AND absensi.tanggal = '"+tanggal+"'")
     data_karyawan = cur.fetchall()
     return data_karyawan
 
@@ -306,11 +312,137 @@ def hitungIzinJam(id):
     izinjam = 0
     for t in tanggal:
         cur = db.cursor()
-        print("SELECT * FROM izin_jam where tanggal = '"+t.strftime('%Y-%m-%d')+"' AND id_karyawan = '"+ str(id) +"'")
         cur.execute("SELECT * FROM izin_jam where tanggal = '"+t.strftime('%Y-%m-%d')+"' AND id_karyawan = '"+ str(id) +"'")
         res = cur.fetchone()
         if res:
-            print(res[8])
             izinjam += int(res[8])
     return izinjam
+
+def getGajiKaryawan(id):
+    cur = db.cursor()
+    cur.execute("SELECT u_pokok, t_jabatan, t_keahlian, t_lain FROM karyawan WHERE nik = '"+id+"' limit 1")
+    res = cur.fetchone()
+    return res      
+
+def getJamLembur(id):
+    totalLembur = 0
+    cur = db.cursor()
+    cur.execute("select total_jam from lembur WHERE id_karyawan = '"+id+"'")
+    res = cur.fetchall()
+    if res:
+        for l in res:
+            totalLembur+= int(l[0])
+    return totalLembur      
+
+def getInsentif():
+    cur = db.cursor()
+    cur.execute("SELECT karyawan.nama, karyawan.nik, insentif.* FROM insentif JOIN karyawan ON insentif.id_karyawan = karyawan.nik")
+    res = cur.fetchall()
+    return res
+
+def getTotalnsentif(id):
+    date_obj = date.today()
+    totalinsentif = 0
+    start_period = datetime.strftime((date_obj - relativedelta(months=1)).replace(day=26), "%Y-%m-%d")
+    end_period = datetime.strftime(date_obj.replace(day=25), "%Y-%m-%d")
+
+    cur = db.cursor()
+    cur.execute("SELECT * FROM insentif where tanggal between '"+str(start_period)+"' AND '"+str(end_period)+"' AND id_karyawan = '"+id+"'")
+    res = cur.fetchall()
+    
+    for i in res:
+        totalinsentif += (int(i[3])*int(i[4]))
+    return totalinsentif
+
+def getPinjamanPajak():
+    date_obj = datetime.today()
+    
+    if int(date_obj.strftime("%d")) > 25:
+        start = datetime.strftime(date_obj.replace(day=26), "%Y-%m-%d")
+    else:
+        start = datetime.strftime((date_obj - relativedelta(months=1)).replace(day=26), "%Y-%m-%d")
+
+    data = []
+
+    start_time = datetime.strptime(start, "%Y-%m-%d")
+
+    cur = db.cursor()
+    cur.execute("SELECT pinjaman_pajak.*, karyawan.nama FROM pinjaman_pajak JOIN karyawan on karyawan.nik = pinjaman_pajak.id_karyawan")
+    res = cur.fetchall()
+    for i in res:
+        if i[3]:
+            tanggal = datetime.strptime(i[3], "%Y-%m-%d")
+            if tanggal > start_time and date_obj <= tanggal:
+                in_data = []
+                for idx, d in enumerate(i):
+                    if idx == 2:
+                        in_data.append(locale.currency(int(d), grouping=True))
+                    else:
+                        in_data.append(d)
+                data.append(in_data)
+        else:
+            in_data = []
+            for idx, d in enumerate(i):
+                if idx == 2:
+                    in_data.append(locale.currency(int(d), grouping=True))
+                else:
+                    in_data.append(d)
             
+            data.append(in_data)
+
+    return data
+
+def getDataPinjamanPajakById(id):
+    cur = db.cursor()
+    cur.execute("SELECT pinjaman_pajak.*, karyawan.nama FROM pinjaman_pajak JOIN karyawan ON karyawan.nik = pinjaman_pajak.id_karyawan where kode_potongan_lain = '"+id+"' limit 1")
+    res = cur.fetchone()
+    data = list(res)
+    data.append(str(data[4])+'-'+str(data[6]))
+    return data
+
+def getPajak(id):
+    cur = db.cursor()
+    cur.execute("SELECT pinjaman_pajak.jumlah FROM pinjaman_pajak WHERE id_karyawan = '"+id+"' AND jenis_pot = 'pjk' limit 1")
+    res = cur.fetchone()
+    if res:
+        return res
+    else:
+        return [0]
+    
+def getPinjaman(id, now):
+    cur = db.cursor()
+    cur.execute("SELECT pinjaman_pajak.jumlah, pinjaman_pajak.berlaku FROM pinjaman_pajak WHERE id_karyawan = '"+id+"' AND jenis_pot = 'pnj' limit 1")
+    res = cur.fetchone()
+    if res:
+        tanggal = datetime.strptime(res[1], "%Y-%m-%d")
+        if tanggal >= now:
+            return res
+        else:        
+            return [0]
+    else:
+        return [0]
+    
+def getDataKomplain():
+    cur = db.cursor()
+    cur.execute("SELECT komplain.*, karyawan.nama FROM komplain JOIN karyawan ON komplain.id_karyawan = karyawan.nik")
+    res = cur.fetchall()
+    return res
+
+def getDataKomplainById(id):
+    cur = db.cursor()
+    cur.execute("SELECT komplain.*, karyawan.nama FROM komplain JOIN karyawan ON komplain.id_karyawan = karyawan.nik WHERE kode_komplain = '"+str(id)+"'")
+    res = cur.fetchone()
+    return res
+
+def getDataKomplainByName(id, now):
+    data = 0
+    cur = db.cursor()
+    cur.execute("SELECT * FROM komplain where id_karyawan = '"+str(id)+"'")
+    res = cur.fetchall()
+    for i in res:
+        if now <= datetime.strptime(i[6],"%Y-%m-%d"):
+            if i[1] == 'kr':
+                data = -int(i[2])
+            else:
+                data = int(i[2])
+    return data

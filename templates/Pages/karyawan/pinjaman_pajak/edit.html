@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Pinjaman dan Pajak</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="card mt-3">
+            <br>
+            <div class="ms-3 mt-1">
+                <p><b>Update Data Pinjaman dan Pajak</b></p>
+            </div>
+            <hr>
+            <form action="/update-pinjaman-pajak/{{ data[5] }}" method="post" class="ms-3 mb-3">
+                <div class="row pe-3">
+                    <div class="col-md-8">
+                        <div>
+                            <h6><b>Karyawan</b></h6>
+                            <input type="text" list="karyawanList" name="no_karyawan" class="form-control" value="{{ data[7] }}" placeholder="Silahkan Pilih Karyawan yang Izin">
+                            <datalist id="karyawanList">
+                                {% for d in karyawan %}
+                                    <option value="{{d[1]}}-{{d[2]}}">{{d[1]}} - {{d[2]}}</option>
+                                {% endfor %}
+                            </datalist>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div>
+                            <h6><b>Jenis Potongan</b></h6>
+                            <select name="jenis_pot" id="jenis_potongan" class="form-control">
+                                <option value="{{ data[1] }}" selected hidden>(Terpilih: {{ "Pinjaman" if data[1] == "pnj" else "Pajak" }}) - Silahkan Pilih Jenis Potongan yang akan dirubah </option>
+                                <option value="pnj">Pinjaman</option>
+                                <option value="pjk">Pajak</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mt-4">
+                        <div>
+                            <h6><b>Jumlah Potongan</b></h6>
+                            <input type="number" required value="{{ data[2] }}" name="jumlah" class="form-control" id="">
+                        </div>
+                    </div>
+                    <div class="col-md-4 mt-4" id="conditionalField">
+                        <div>
+                            <h6><b>Batas Berlaku</b></h6>
+                            <input type="date" name="berlaku" value="{{ data[3] }}" class="form-control" id="batas_berlaku">
+                        </div>
+                    </div>
+                    <div class="col-md-12 mt-4">
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-success" id="save-button" type="submit">Simpan</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q"
+        crossorigin="anonymous"></script>
+
+    {% if request.url_rule.rule == "/update-pinjaman-pajak/<id>" %}
+    <script lang="javascript">
+        jenis = document.getElementById('jenis_potongan')
+        button = document.getElementById("save-button")
+        conditionalField = document.getElementById("conditionalField")
+        batas_berlaku = document.getElementById("batas_berlaku")
+
+        jenis.addEventListener("change", function(){
+            if(jenis.value != ''){
+                button.removeAttribute("disabled")
+            }
+            if(jenis.value == 'pnj'){
+                batas_berlaku.removeAttribute("disabled")
+                conditionalField.removeAttribute("style")
+                batas_berlaku.setAttribute("required", "required")
+            }else if(jenis.value == 'pjk'){
+                batas_berlaku.setAttribute("disabled", "disabled")
+                conditionalField.setAttribute("style", "display:none")
+                batas_berlaku.removeAttribute("required")
+            }
+        })
+
+        if(jenis.value == ''){
+            button.setAttribute("disabled", "disabled")
+            batas_berlaku.setAttribute("disabled", "disabled")
+            conditionalField.setAttribute("style", "display:none")
+        }
+
+        if(jenis.value == "pjk"){
+            batas_berlaku.setAttribute("disabled", "disabled")
+            conditionalField.setAttribute("style", "display:none")
+            batas_berlaku.removeAttribute("required")
+        }
+    </script>
+    {% endif %}
+</body>
+</html>

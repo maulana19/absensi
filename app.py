@@ -1,4 +1,6 @@
-from flask import Flask, jsonify, request, render_template,redirect
+import io
+from flask import Flask, jsonify, request, render_template,redirect, send_file
+import numpy as np
 import pandas as pd
 import os
 
@@ -6,15 +8,15 @@ from Databases.connect import db
 from Function.loadData import *
 from Function.DataKaryawan import getNamaKaryawan, insertJadwal, updateKaryawan
 import locale
-from Function.tambahData import insertLibur, insertIzinJam, insertDataAbsen, insertIzinKaryawan, insertLembur
-from Function.hapusData import deleteLibur,deleteIzin, deleteIzinJam, deleteLembur
+from Function.tambahData import insertLibur, insertIzinJam, insertDataAbsen, insertInsentif, insertIzinKaryawan, insertLembur, insertPotonganLain, insertDataKomplain, insertGajiKaryawan
+from Function.hapusData import deleteLibur,deleteIzin, deleteIzinJam, deleteLembur, deletePinjamanPajak, deleteKomplain
 from Function.convertData import changeFormatDate
-from Function.updateData import updateIzin, updateLibur, updateIzinJam
+from Function.updateData import updateIzin, updateLibur, updateIzinJam, updateDataPinjamanPajak, updateGaji, updateLembur, updateKomplain, updateDataKaryawanBatch
 
 # from Function.tambahAbsensiKaryawanShift import insertDataKaryawanShift
 
 app = Flask(__name__)
-locale.setlocale(locale.LC_TIME, "id_ID.utf8")
+locale.setlocale(locale.LC_ALL, "id_ID.utf8")
 
 @app.route('/')
 def home():
@@ -279,7 +281,6 @@ def cariIzinJam():
 def daftarLembur():
     data_lembur = getDataLembur()
     data_karyawan = getDataKaryawan()
-    print(data_lembur)
     return render_template("Pages/absen/lembur/list.html", data = data_lembur, karyawan = data_karyawan)
 
 @app.route('/tambah-lembur', methods =['GET', 'POST'])
@@ -298,12 +299,22 @@ def hapusLembur(id):
     deleteLembur(id)
     return redirect('/lembur')
 
+@app.route('/ubah-lembur/<id>', methods = ["GET", "POST"])
+def ubahLembuar(id):
+    if request.method == "GET":
+        data = searchDataLemburById(id)
+        print(data)
+        return render_template('Pages/absen/lembur/edit.html', data_karyawan = data)
+    elif request.method == "POST":
+        if request.form['total_jam'] != "":
+            updateLembur(request.form['total_jam'],'total_jam', id)
+        return redirect('/lembur')
 
 @app.route('/gaji-karyawan', methods=['GET'])
 def gajikaryawan():
     data = []
+    tanggal_sekarang = datetime.now()
     data_karyawan = getDataKaryawan()
-    
     tanggal = getHeaderAbsen()
     if data_karyawan:
         for d in data_karyawan:
@@ -313,15 +324,189 @@ def gajikaryawan():
             totalharisakit = hitungHariTidakKerja(d[1], "S")
             totalhariizinkhusus = hitungHariTidakKerja(d[1], "IK")
             totalharialpha = len(tanggal) - totalharikerja - totalhariizin - totalharicuti - totalharisakit - totalhariizinkhusus
+            dataGajiKaryawan = getGajiKaryawan(d[1])
 
+            gaji_pokok = dataGajiKaryawan[0] if dataGajiKaryawan[0] != None else 0
+            tunjangan_jabatan = dataGajiKaryawan[1] if dataGajiKaryawan[1] != None else 0
+            tunjangan_keahlian = dataGajiKaryawan[2] if dataGajiKaryawan[2] != None else 0
+            tunjangan_lain = dataGajiKaryawan[3] if dataGajiKaryawan[3] != None else 0
+            upah_total = gaji_pokok+tunjangan_jabatan+tunjangan_keahlian+tunjangan_lain
+
+            lembur = getJamLembur(d[1])
+            insentif = getTotalnsentif(d[1])
+
+            gajiKotor= upah_total+lembur+insentif
 
             totalizinperjam = hitungIzinJam(d[1])
-            data.append([d[0],d[1], d[2], totalharikerja, totalizinperjam, totalhariizin, totalharicuti, totalharisakit, totalhariizinkhusus, totalharialpha])
+            potonganIzin = (int(upah_total)/25) * (int(totalhariizin) + int(totalharialpha))
+            potonganIzinJam = (int(upah_total)/25)/7 * (int(totalizinperjam))
+
+            potonganPajak = int(getPajak(d[1])[0])
+            potonganPinjaman = int(getPinjaman(d[1], tanggal_sekarang)[0])
+
+            komplain = getDataKomplainByName(d[1], tanggal_sekarang)
+            
+            gaji_bersih = int(gajiKotor) - int(potonganIzin) - int(potonganIzinJam) - int(potonganPajak) - int(potonganPinjaman) + komplain
+            data.append(
+                [
+                    d[0],d[1], d[2], 
+                    totalharikerja, totalizinperjam, totalhariizin, totalharicuti, 
+                    totalharisakit, totalhariizinkhusus, totalharialpha,
+                    locale.currency(gaji_pokok, grouping=True), 
+                    locale.currency(tunjangan_jabatan, grouping=True),
+                    locale.currency(tunjangan_keahlian, grouping=True),
+                    locale.currency(tunjangan_lain, grouping=True),
+                    locale.currency(upah_total, grouping=True),
+                    locale.currency(lembur*15897, grouping=True),
+                    locale.currency(insentif, grouping=True),
+                    locale.currency(gajiKotor, grouping=True),
+                    locale.currency(potonganIzin, grouping=True),
+                    locale.currency(potonganIzinJam, grouping=True),
+                    locale.currency(potonganPajak, grouping=True),
+                    locale.currency(potonganPinjaman, grouping=True),
+                    locale.currency(komplain, grouping=True),
+                    locale.currency(gaji_bersih, grouping=True),
+                ])
     return render_template('Pages/karyawan/gaji/list.html', data = data)
 
-@app.route('/ubah-gaji/<id>')
+@app.route('/tambah-gaji', methods=['GET', 'POST'])
+def tambahGaji():
+    if request.method == "GET":
+        return render_template('Pages/karyawan/gaji/tambah.html')
+    if request.method == "POST":
+        updateDataKaryawanBatch(request.files)
+        insertGajiKaryawan(request.files)
+        return redirect('/gaji-karyawan')
+
+@app.route('/ubah-gaji/<id>', methods=['GET', 'POST'])
 def ubahGaji(id):
-    return render_template('Pages/karyawan/gaji/edit.html')
+    if request.method == "GET":
+        data_karyawan = searchDataKaryawanID(id)
+        return render_template('Pages/karyawan/gaji/edit.html', data = data_karyawan, kode = id)
+    if request.method == "POST":
+        if request.form['gaji_pokok'] != "":
+            updateGaji(request.form['gaji_pokok'], 'u_pokok', id)
+        if request.form['t_keahlian'] != "":
+            updateGaji(request.form['t_keahlian'], 't_keahlian', id)
+        if request.form['t_jabatan'] != "":
+            updateGaji(request.form['t_jabatan'], 't_jabatan', id)
+        if request.form['t_lain'] != "":
+            updateGaji(request.form['t_lain'], 't_lain', id)
+        return redirect('/daftar-karyawan')
+
+@app.route('/insentif')
+def insentif():
+    dataInsentif = getInsentif()
+    data = []
+    for i in dataInsentif:
+        insentif = list(i)
+        insentif.append(locale.currency(int(int(i[5]) * int(i[6])), grouping=True))
+        insentif[6] = locale.currency(int(i[6]), grouping=True)
+        data.append(insentif)
+    return render_template('Pages/karyawan/insentif/list.html', data = data)
+
+@app.route('/tambah-insentif', methods=["GET", "POST"])
+def tambahInsentif():
+    if request.method == "GET":
+        data_karyawan = getDataKaryawan()
+        return render_template('Pages/karyawan/insentif/add.html', data=data_karyawan)
+    elif request.method == "POST":
+        insertInsentif(request.form)
+        return redirect('/insentif')
+
+@app.route('/pinjaman-pajak')
+def pinjamanPajak():
+    dataPinjaman = getPinjamanPajak()
+    return render_template('Pages/karyawan/pinjaman_pajak/list.html', data = dataPinjaman)
+
+@app.route('/pinjaman-pajak/tambah-baru', methods=["get", "post"])
+def tambahPinjamanPajak():
+    if request.method == "GET":
+        data_karyawan = getDataKaryawan()
+        return render_template("Pages/karyawan/pinjaman_pajak/add.html" ,data = data_karyawan)
+    elif request.method == "POST":
+        insertPotonganLain(request.form)
+        return redirect('/pinjaman-pajak')
+    
+@app.route('/update-pinjaman-pajak/<id>', methods=['GET', 'POST'])
+def updatePinjamanPajak(id):
+    if request.method == "GET":
+        data_karyawan = getDataKaryawan()
+        data_pinjaman_pajak = getDataPinjamanPajakById(id)
+        return render_template('Pages/karyawan/pinjaman_pajak/edit.html', karyawan = data_karyawan, data = data_pinjaman_pajak)
+    elif request.method == "POST":
+        if request.form['no_karyawan'] != "":
+            id_karyawan = request.form['no_karyawan'].split('-')[0]
+            updateDataPinjamanPajak(id_karyawan,"id_karyawan", id)
+        if request.form['jenis_pot']:
+            updateDataPinjamanPajak(request.form['jenis_pot'],"jenis_pot", id)
+            if request.form['jenis_pot'] == 'pjk':
+                updateDataPinjamanPajak('',"berlaku", id)
+            if request.form['jenis_pot'] == 'pnj':
+                updateDataPinjamanPajak(request.form['berlaku'],"berlaku", id)
+        if request.form['jumlah'] != "":
+            updateDataPinjamanPajak(request.form['jumlah'], "jumlah", id)
+
+        return redirect('/pinjaman-pajak')
+    
+@app.route('/hapus-pinjaman-pajak/<id>', methods=['GET'])
+def hapusPinjamanPajak(id):
+    deletePinjamanPajak(id)
+    return redirect('/pinjaman-pajak')
+
+@app.route('/komplain', methods=["GET", "POST"])
+def daftarKomplain():
+    data_komplain = getDataKomplain()
+    return render_template('Pages/karyawan/komplain/list.html', data = data_komplain)
+
+@app.route('/komplain/tambah-baru', methods=["GET", "POST"])
+def tambahKomplain():
+    if request.method == "GET":
+        data_karyawan = getDataKaryawan()
+        return render_template('Pages/karyawan/komplain/add.html', data= data_karyawan)
+    elif request.method == "POST":
+        insertDataKomplain(request.form)
+        return redirect('/komplain')
+
+@app.route('/update-komplain/<id>', methods=["GET", "POST"])
+def editKomplain(id):
+    if request.method == "GET":
+        data_karyawan = getDataKaryawan()
+        data_komplain = getDataKomplainById(id)
+        return render_template('Pages/karyawan/komplain/edit.html', data = data_karyawan, komplain = data_komplain)
+    if request.method == "POST":
+        if request.form['no_karyawan'] != "":
+            id_karyawan = request.form['no_karyawan'].split('-')[0]
+            updateKomplain(id_karyawan, 'id_karyawan', id)
+        if request.form['jenis'] != "":
+            updateKomplain(request.form['jenis'], 'jenis', id)
+        if request.form['berlaku'] != "":
+            updateKomplain(request.form['berlaku'], 'berlaku', id)
+        if request.form['jumlah'] != "":
+            updateKomplain(request.form['jumlah'], 'jumlah', id)
+        if request.form['keterangan'] != "":
+            updateKomplain(request.form['keterangan'], 'keterangan', id)
+        
+        return redirect('/komplain')
+
+@app.route('/hapus-komplain/<id>')
+def hapusKomplain(id):
+    deleteKomplain(id)
+    return redirect('/komplain')
+
+@app.route('/data/gaji-karyawan/download')
+def downloadGajiKaryawan():
+    data = getDataKaryawan()
+    arr = np.array(data, dtype="str_")
+    dataFrame = pd.DataFrame(arr, columns=["NOMOR", "NIK", "NAMA KARYAWAN", "JAM KERJA", "UPAH POKOK", "TUNJANGAN JABATAN", "TUNJANGAN KEAHLIAN", "TUNJAGAN LAIN"])
+    filename = "DataKaryawan.xlsx"
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        dataFrame.to_excel(writer, index=False, sheet_name='Sheet1')
+    output.seek(0)
+    return send_file(output, as_attachment=True, download_name=filename, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+
+
 
 
 app.run(port=5000, debug=True)
