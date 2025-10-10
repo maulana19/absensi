@@ -300,7 +300,7 @@ def hapusLembur(id):
     return redirect('/lembur')
 
 @app.route('/ubah-lembur/<id>', methods = ["GET", "POST"])
-def ubahLembuar(id):
+def ubahLembur(id):
     if request.method == "GET":
         data = searchDataLemburById(id)
         print(data)
@@ -310,6 +310,14 @@ def ubahLembuar(id):
             updateLembur(request.form['total_jam'],'total_jam', id)
         return redirect('/lembur')
 
+@app.route('/cari-lembur')
+def cari_lembur():
+    search_key = request.args.get('key')
+    if search_key == "":
+        return redirect('/lembur')
+    
+    data_search = searchDataLembur(search_key)
+    return render_template("Pages/absen/lembur/list.html", data = data_search)
 @app.route('/gaji-karyawan', methods=['GET'])
 def gajikaryawan():
     data = []

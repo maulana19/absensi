@@ -45,16 +45,31 @@
                     </li>
                     <li class="mb-1 nav-item">
                         <a href="#" class="nav-link  {{ 'collapsed' if request.path == '/absensi' }}" aria-current="page" data-bs-toggle="collapse"
-                            data-bs-target="#dashboard-collapse" style="color: black;" aria-expanded=" {{ 'true' if request.path == '/absensi' else 'false' }}">
+                            data-bs-target="#dashboard-collapse" style="color: black;" aria-expanded=" {{ 'true' if request.path == '/absensi'else 'false' }}">
                             ABSENSI
                         </a>
-                        <div class="collapse  {{ 'show' if request.path == '/absensi' }} ms-2" id="dashboard-collapse">
+                        <div class="collapse  {{ 'show' if request.path == '/absensi' }} {{ 'show' if request.path == '/izin' }} {{ 'show' if request.path == '/izin-jam' }} {{ 'show' if request.path == '/lembur' }} {{ 'show' if request.path == '/libur' }} ms-2" id="dashboard-collapse">
                             <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small">
                                 <li><a href="/absensi" class="nav-link  {{ 'aktif' if request.path == '/absensi' }} link-dark">Rekap Absensi</a></li>
                                 <li><a href="/izin" class="nav-link link-dark {{ 'aktif' if request.path == '/izin' }}">Izin</a></li>
                                 <li><a href="/izin-jam" class="nav-link link-dark {{ 'aktif' if request.path == '/izin-jam' }}">Izin (Jam)</a></li>
                                 <li><a href="/lembur" class="nav-link link-dark {{ 'aktif' if request.path == '/lembur' }}">Lembur</a></li>
                                 <li><a href="/libur" class="nav-link link-dark {{ 'aktif' if request.path == '/libur' }}">Hari Libur</a></li>
+                            </ul>
+                        </div>
+                    </li>
+                    <li class="mb-1 nav-item">
+                        <a href="#" class="nav-link " aria-current="page" data-bs-toggle="collapse"
+                            data-bs-target="#karyawan-collapse" style="color: black;" aria-expanded="false">
+                            KARYAWAN
+                        </a>
+                        <div class="collapse  {{ 'show' if request.path == '/gaji-karyawan' }} {{ 'show' if request.path == '/insentif' }} {{ 'show' if request.path == '/pinjaman-pajak' }} {{ 'show' if request.path == '/komplain' }} {{ 'show' if request.path == '/daftar-karyawan' }} ms-2" id="karyawan-collapse">
+                            <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small">
+                                <li><a href="/gaji-karyawan" class="nav-link  {{ 'aktif' if request.path == '/gaji-karyawan' }} link-dark">Gaji Karyawan</a></li>
+                                <li><a href="/daftar-karyawan" class="nav-link link-dark {{ 'aktif' if request.path == '/daftar-karyawan' }}">Karyawan</a></li>
+                                <li><a href="/insentif" class="nav-link link-dark {{ 'aktif' if request.path == '/insentif' }}">Insentif</a></li>
+                                <li><a href="/pinjaman-pajak" class="nav-link link-dark {{ 'aktif' if request.path == '/pinjaman-pajak' }}">Potongan Pinjaman dan Pajak</a></li>
+                                <li><a href="/komplain" class="nav-link link-dark {{ 'aktif' if request.path == '/komplain' }}">Komplain</a></li>
                             </ul>
                         </div>
                     </li>
@@ -72,30 +87,6 @@
                                 <li><a href="#" class="nav-link link-dark rounded">Annually</a></li>
                             </ul>
                         </div>
-                    </li>
-                    <li>
-                        <a href="#" class="nav-link link-dark">
-                            <svg class="bi me-2" width="16" height="16">
-                                <use xlink:href="#table"></use>
-                            </svg>
-                            Orders
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#" class="nav-link link-dark">
-                            <svg class="bi me-2" width="16" height="16">
-                                <use xlink:href="#grid"></use>
-                            </svg>
-                            Products
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#" class="nav-link link-dark">
-                            <svg class="bi me-2" width="16" height="16">
-                                <use xlink:href="#people-circle"></use>
-                            </svg>
-                            Customers
-                        </a>
                     </li>
                 </ul>
             </div>

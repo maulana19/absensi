@@ -266,6 +266,13 @@ def getDataLembur():
     return data
 
 
+def searchDataLembur(key):
+    print("SELECT lembur.*, karyawan.nama FROM lembur join karyawan on lembur.id_karyawan = karyawan.nik where karyawan.nama LIKE '%"+str(key)+"%'")
+    cur = db.cursor()
+    cur.execute("SELECT lembur.*, karyawan.nama FROM lembur join karyawan on lembur.id_karyawan = karyawan.nik where karyawan.nama LIKE '%"+str(key)+"%'")
+    data = cur.fetchall()
+    return data
+
 def searchDataLemburById(id):
     cur = db.cursor()
     cur.execute("SELECT lembur.*, karyawan.nama, absensi.jam_masuk, absensi.jam_keluar FROM lembur JOIN karyawan on lembur.id_karyawan = karyawan.nik JOIN absensi on lembur.id_karyawan = absensi.id_karyawan where kode_lembur = '"+id+"' and absensi.tanggal = lembur.tanggal limit 1")

@@ -1,3 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Tambah Hari Libur
+{% endblock %}
+
+{% block navbar %}
+    <nav class="navbar navbar-light bg-success" style="position: sticky;">
+        <a class="ms-3" style="text-decoration: none;color: white;font-weight: bold;" data-bs-toggle="offcanvas"
+            href="#offcanvasExample" role="button" aria-controls="offcanvasExample">
+            MENU
+        </a>
+    </nav>
+{% endblock %}
+
+
+{% block content %}  
+    <div class="card mt-3">
+        <div class="card-header">
+            <h5 class="mt-2" style="line-height: 0.4;"><b>Update Data Hari Libur Karyawan</b></h5>
+            <h6 style="color: rgb(73, 73, 73);">Silahkan lengkapi data berikut untuk mengubah data hari libur</h6>
+        </div>
+        <form action="/update-libur/{{ data[3] }}" method="post" class="ms-3 mb-3">
+            <div class="row pe-3">
+                <div class="col-md-4">
+                    <div>
+                        <h6><b>Tanggal</b> ({{ data[1] }})</h6>
+                        <input type="date" name="tanggal" class="form-control" id="">
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <div>
+                        <h6><b>Keterangan</b></h6>
+                        <textarea name="keterangan" id="" class="form-control" placeholder="Beri Keterangan untuk hari libur yang ditambahkan">{{ data[2] }}</textarea>
+                    </div>
+                </div>
+                <div class="col-md-12 mt-4">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-success" type="submit">Update</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+{% endblock %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,34 +55,6 @@
 </head>
 <body>
     <div class="container-fluid">
-        <div class="card mt-3">
-            <br>
-            <div class="ms-3 mt-1">
-                <p><b>Update Data Hari Libur Karyawan</b></p>
-            </div>
-            <hr>
-            <form action="/update-libur/{{ data[3] }}" method="post" class="ms-3 mb-3">
-                <div class="row pe-3">
-                    <div class="col-md-4">
-                        <div>
-                            <h6><b>Tanggal</b> ({{ data[1] }})</h6>
-                            <input type="date" name="tanggal" class="form-control" id="">
-                        </div>
-                    </div>
-                    <div class="col-md-8">
-                        <div>
-                            <h6><b>Keterangan</b></h6>
-                            <textarea name="keterangan" id="" class="form-control" placeholder="Beri Keterangan untuk hari libur yang ditambahkan">{{ data[2] }}</textarea>
-                        </div>
-                    </div>
-                    <div class="col-md-12 mt-4">
-                        <div class="d-grid gap-2">
-                            <button class="btn btn-success" type="submit">Update</button>
-                        </div>
-                    </div>
-                </div>
-            </form>
-        </div>
     </div>
 
     
