@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block title %}
+    Ubah Data Insentif
+{% endblock %}
+
+{% block navbar %}
+    <nav class="navbar navbar-light bg-success" style="position: sticky;">
+        <a class="ms-3" style="text-decoration: none;color: white;font-weight: bold;" data-bs-toggle="offcanvas"
+            href="#offcanvasExample" role="button" aria-controls="offcanvasExample">
+            MENU
+        </a>
+    </nav>
+{% endblock %}
+
+{% block content %} 
+    <div class="card mt-3">
+        <br>
+        <div class="ms-3 mt-1">
+            <p><b>Ubah Insentif Karyawan</b></p>
+        </div>
+        <hr>
+        <form action="/ubah-insentif/{{ di[8] }}" method="post" class="ms-3 mb-3">
+            <div class="row pe-3">
+                <div class="col-md-4">
+                    <div>
+                        <h6><b>Karyawan</b></h6>
+                        <input type="text" list="karyawanList" value="{{ di[1] }}-{{ di[0] }}" name="no_karyawan" class="form-control" placeholder="Silahkan Pilih Karyawan yang Izin">
+                        <datalist id="karyawanList">
+                            {% for d in data %}
+                                <option value="{{ d[1] }}-{{ d[2] }}">{{ d[1] }} - {{ d[2] }}</option>
+                            {% endfor %}
+                        </datalist>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div>
+                        <h6><b>Tanggal</b> ({{ di[3] }})</h6>
+                        <input type="date" name="tanggal" class="form-control" id="">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div>
+                        <h6><b>Tujuan</b></h6>
+                        <input type="text" name="tujuan" value="{{ di[4] }}" class="form-control" placeholder="Tujuan Pemberian Uang Insentif" id="">
+                    </div>
+                </div>
+                <div class="col-md-4 mt-4">
+                    <div>
+                        <h6><b>Jumlah Hari</b></h6>
+                        <input type="number" value="{{ di[5] }}" name="jumlah_hari" class="form-control" id="">
+                    </div>
+                </div>
+                <div class="col-md-8 mt-4">
+                    <div>
+                        <h6><b>Insentif Perhari</b></h6>
+                        <input type="number" name="insentif" value="{{ di[6] }}" class="form-control" id="">
+                    </div>
+                </div>
+                <div class="col-md-12 mt-4">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-success" type="submit">Simpan</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+{% endblock %}

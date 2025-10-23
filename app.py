@@ -9,14 +9,14 @@ from Function.loadData import *
 from Function.DataKaryawan import getNamaKaryawan, insertJadwal, updateKaryawan
 import locale
 from Function.tambahData import insertLibur, insertIzinJam, insertDataAbsen, insertInsentif, insertIzinKaryawan, insertLembur, insertPotonganLain, insertDataKomplain, insertGajiKaryawan
-from Function.hapusData import deleteLibur,deleteIzin, deleteIzinJam, deleteLembur, deletePinjamanPajak, deleteKomplain
+from Function.hapusData import deleteInsentif, deleteLibur,deleteIzin, deleteIzinJam, deleteLembur, deletePinjamanPajak, deleteKomplain
 from Function.convertData import changeFormatDate
-from Function.updateData import updateIzin, updateLibur, updateIzinJam, updateDataPinjamanPajak, updateGaji, updateLembur, updateKomplain, updateDataKaryawanBatch
+from Function.updateData import updateIzin, updateLibur, updateIzinJam, updateDataPinjamanPajak, updateGaji, updateLembur, updateKomplain, updateDataKaryawanBatch,updateInsentif
 
 # from Function.tambahAbsensiKaryawanShift import insertDataKaryawanShift
 
 app = Flask(__name__)
-locale.setlocale(locale.LC_ALL, "id_ID.utf8")
+locale.setlocale(locale.LC_ALL, "id_ID.UTF-8")
 
 @app.route('/')
 def home():
@@ -303,7 +303,6 @@ def hapusLembur(id):
 def ubahLembur(id):
     if request.method == "GET":
         data = searchDataLemburById(id)
-        print(data)
         return render_template('Pages/absen/lembur/edit.html', data_karyawan = data)
     elif request.method == "POST":
         if request.form['total_jam'] != "":
@@ -323,15 +322,19 @@ def gajikaryawan():
     data = []
     tanggal_sekarang = datetime.now()
     data_karyawan = getDataKaryawan()
-    tanggal = getHeaderAbsen()
+    tanggal_header = getHeaderAbsen()
+    tanggal = []
+    for t in tanggal_header:
+        tanggal.append(datetime.strftime(t, "%Y-%m-%d"))
+    totalharilibur = hitungHariLibur(tanggal)
     if data_karyawan:
         for d in data_karyawan:
-            totalharikerja = hitungHariKerja(d[0])
+            totalharikerja = hitungHariKerja(d[1])
             totalhariizin = hitungHariTidakKerja(d[1], "I")
             totalharicuti = hitungHariTidakKerja(d[1], "C")
             totalharisakit = hitungHariTidakKerja(d[1], "S")
             totalhariizinkhusus = hitungHariTidakKerja(d[1], "IK")
-            totalharialpha = len(tanggal) - totalharikerja - totalhariizin - totalharicuti - totalharisakit - totalhariizinkhusus
+            totalharialpha = len(tanggal) - totalharikerja - totalhariizin - totalharicuti - totalharisakit - totalhariizinkhusus - totalharilibur
             dataGajiKaryawan = getGajiKaryawan(d[1])
 
             gaji_pokok = dataGajiKaryawan[0] if dataGajiKaryawan[0] != None else 0
@@ -340,7 +343,7 @@ def gajikaryawan():
             tunjangan_lain = dataGajiKaryawan[3] if dataGajiKaryawan[3] != None else 0
             upah_total = gaji_pokok+tunjangan_jabatan+tunjangan_keahlian+tunjangan_lain
 
-            lembur = getJamLembur(d[1])
+            lembur = getJamLembur(d[1])*15897
             insentif = getTotalnsentif(d[1])
 
             gajiKotor= upah_total+lembur+insentif
@@ -365,7 +368,7 @@ def gajikaryawan():
                     locale.currency(tunjangan_keahlian, grouping=True),
                     locale.currency(tunjangan_lain, grouping=True),
                     locale.currency(upah_total, grouping=True),
-                    locale.currency(lembur*15897, grouping=True),
+                    locale.currency(lembur, grouping=True),
                     locale.currency(insentif, grouping=True),
                     locale.currency(gajiKotor, grouping=True),
                     locale.currency(potonganIzin, grouping=True),
@@ -376,6 +379,73 @@ def gajikaryawan():
                     locale.currency(gaji_bersih, grouping=True),
                 ])
     return render_template('Pages/karyawan/gaji/list.html', data = data)
+
+@app.route('/cari-gaji')
+def searchGaji():
+    data  = []    
+    data_karyawan = searchDataKaryawan(request.args.get('key'))
+    tanggal_header = getHeaderAbsen()
+    tanggal = []
+    for t in tanggal_header:
+        tanggal.append(datetime.strftime(t, "%Y-%m-%d"))
+    tanggal_sekarang = datetime.now()
+    totalharilibur = hitungHariLibur(tanggal)
+
+    if request.args.get('key') != "":
+        if data_karyawan:
+            for d in data_karyawan:
+                totalharikerja = hitungHariKerja(d[1])
+                totalhariizin = hitungHariTidakKerja(d[1], "I")
+                totalharicuti = hitungHariTidakKerja(d[1], "C")
+                totalharisakit = hitungHariTidakKerja(d[1], "S")
+                totalhariizinkhusus = hitungHariTidakKerja(d[1], "IK")
+                totalharialpha = len(tanggal) - totalharikerja - totalhariizin - totalharicuti - totalharisakit - totalhariizinkhusus - totalharilibur
+                dataGajiKaryawan = getGajiKaryawan(d[1])
+
+                gaji_pokok = dataGajiKaryawan[0] if dataGajiKaryawan[0] != None else 0
+                tunjangan_jabatan = dataGajiKaryawan[1] if dataGajiKaryawan[1] != None else 0
+                tunjangan_keahlian = dataGajiKaryawan[2] if dataGajiKaryawan[2] != None else 0
+                tunjangan_lain = dataGajiKaryawan[3] if dataGajiKaryawan[3] != None else 0
+                upah_total = gaji_pokok+tunjangan_jabatan+tunjangan_keahlian+tunjangan_lain
+
+                lembur = getJamLembur(d[1])
+                insentif = getTotalnsentif(d[1])
+
+                gajiKotor= upah_total+lembur+insentif
+
+                totalizinperjam = hitungIzinJam(d[1])
+                potonganIzin = (int(upah_total)/25) * (int(totalhariizin) + int(totalharialpha))
+                potonganIzinJam = (int(upah_total)/25)/7 * (int(totalizinperjam))
+
+                potonganPajak = int(getPajak(d[1])[0])
+                potonganPinjaman = int(getPinjaman(d[1], tanggal_sekarang)[0])
+
+                komplain = getDataKomplainByName(d[1], tanggal_sekarang)
+                
+                gaji_bersih = int(gajiKotor) - int(potonganIzin) - int(potonganIzinJam) - int(potonganPajak) - int(potonganPinjaman) + komplain
+                data.append(
+                    [
+                        d[0],d[1], d[2], 
+                        totalharikerja, totalizinperjam, totalhariizin, totalharicuti, 
+                        totalharisakit, totalhariizinkhusus, totalharialpha,
+                        locale.currency(gaji_pokok, grouping=True), 
+                        locale.currency(tunjangan_jabatan, grouping=True),
+                        locale.currency(tunjangan_keahlian, grouping=True),
+                        locale.currency(tunjangan_lain, grouping=True),
+                        locale.currency(upah_total, grouping=True),
+                        locale.currency(lembur*15897, grouping=True),
+                        locale.currency(insentif, grouping=True),
+                        locale.currency(gajiKotor, grouping=True),
+                        locale.currency(potonganIzin, grouping=True),
+                        locale.currency(potonganIzinJam, grouping=True),
+                        locale.currency(potonganPajak, grouping=True),
+                        locale.currency(potonganPinjaman, grouping=True),
+                        locale.currency(komplain, grouping=True),
+                        locale.currency(gaji_bersih, grouping=True),
+                    ])
+        return render_template('Pages/karyawan/gaji/list.html', data = data)
+    else:
+        return redirect('/gaji-karyawan')
 
 @app.route('/tambah-gaji', methods=['GET', 'POST'])
 def tambahGaji():
@@ -421,6 +491,28 @@ def tambahInsentif():
     elif request.method == "POST":
         insertInsentif(request.form)
         return redirect('/insentif')
+@app.route('/cari-insentif')
+def cariInsentif():
+    if request.args.get('key') != "":
+        data = searchInsentif(request.args.get('key'))
+        return render_template('Pages/karyawan/insentif/list.html', data = data)
+    else:
+        return redirect('/insentif')
+
+@app.route('/ubah-insentif/<id>', methods =['GET', 'POST'])
+def ubahInsentif(id):
+    if request.method == "GET":
+        data_karyawan = getDataKaryawan()
+        data = getInsentifById(id)
+        return render_template('Pages/karyawan/insentif/edit.html', data = data_karyawan, di = data)
+    if request.method == "POST":
+        updateInsentif(request.form, id)
+        return redirect('/insentif')
+
+@app.route('/hapus-insentif/<id>', methods=['GET'])
+def hapusInsentif(id):
+    deleteInsentif(id)
+    return redirect('/insentif')
 
 @app.route('/pinjaman-pajak')
 def pinjamanPajak():
@@ -462,10 +554,21 @@ def hapusPinjamanPajak(id):
     deletePinjamanPajak(id)
     return redirect('/pinjaman-pajak')
 
+@app.route('/cari-pinjaman-pajak')
+def cariPinjamPajak():
+    dataPinjaman = searchPinjamanPajak(request.args.get('key'))
+    return render_template('Pages/karyawan/pinjaman_pajak/list.html', data = dataPinjaman)
+
+
 @app.route('/komplain', methods=["GET", "POST"])
 def daftarKomplain():
+    data = []
     data_komplain = getDataKomplain()
-    return render_template('Pages/karyawan/komplain/list.html', data = data_komplain)
+    for d in data_komplain:
+        dt = list(d)
+        dt[2] = locale.currency(int(dt[2]), grouping=True)
+        data.append(dt)
+    return render_template('Pages/karyawan/komplain/list.html', data = data)
 
 @app.route('/komplain/tambah-baru', methods=["GET", "POST"])
 def tambahKomplain():
@@ -502,6 +605,14 @@ def hapusKomplain(id):
     deleteKomplain(id)
     return redirect('/komplain')
 
+@app.route('/cari-komplain')
+def cariKomplain():
+    if request.args.get('key') != "":
+        data = searchKomplain(request.args.get('key'))
+        return render_template('Pages/karyawan/komplain/list.html', data = data)
+    else:
+        return redirect('/komplain')
+
 @app.route('/data/gaji-karyawan/download')
 def downloadGajiKaryawan():
     data = getDataKaryawan()
@@ -514,7 +625,175 @@ def downloadGajiKaryawan():
     output.seek(0)
     return send_file(output, as_attachment=True, download_name=filename, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
+@app.route('/download-komplain', methods = ['GET', 'POST'])
+def downloadKomplain():
+    if request.method == "GET":
+        data = getDataKaryawan()
+        return render_template('Pages/download/komplain.html', data = data)
+    if request.method == "POST":
+        data = getDatakomplainDocument(request.form)
+        if data == []:
+            data_array = np.array([['-','-','-','-','-','-','-','-']], dtype="str_")
+        else:
+            data_array = np.array(data, dtype="str_")
+        dataframe = pd.DataFrame(data_array, columns=["No", "Jenis Komplain", "Jumlah Komplain", "Keterangan", "Kode Komplain", "Kode Karyawan", "Tanggal", "Nama"])
+        column_fixed = dataframe[["No", "Tanggal", "Kode Karyawan", "Nama", "Jenis Komplain", "Jumlah Komplain", "Keterangan"]]
+        filename = getNamaDokumen('Data Komplain Periode', request.form)
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            column_fixed.to_excel(writer, index=False, sheet_name='Sheet1')
+        output.seek(0)
+        return send_file(output, as_attachment=True, download_name=filename, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
+@app.route('/download-pinjaman-pajak', methods=['GET', 'POST'])
+def downloadPinjamanPajak():
+    if request.method == "GET":
+        data = getDataKaryawan()
+        return render_template('Pages/download/pinjaman-pajak.html', data = data)
+    if request.method == "POST":
+        data = getDataPinjamanPajakDocument(request.form)
+        
+        if data == []:
+            data_array = np.array([['-','-','-','-','-','-','-']], dtype="str_")
+        else:
+            data_array = np.array(data, dtype="str_")
+        
+        dataframe = pd.DataFrame(data_array, columns=["No", "Jenis Potongan", "Jumlah Potongan", "Masa Berlaku", "Kode Karyawan", "Kode Pinjaman", "Nama"])
+        column_fixed = dataframe[["No", "Kode Karyawan", "Nama", "Jenis Potongan", "Jumlah Potongan", "Masa Berlaku"]]
+        filename = getNamaDokumen("Data Pinjaman dan Pajak Periode", request.form) 
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            column_fixed.to_excel(writer, index=False, sheet_name='Sheet1')
+        output.seek(0)
+        return send_file(output, as_attachment=True, download_name=filename, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+
+@app.route('/download-insentif', methods=['GET', 'POST'])
+def downloadInsentif():
+    if request.method == "GET":
+        data = getDataKaryawan()
+        return render_template('Pages/download/insentif.html', data = data)
+    if request.method == "POST":
+        data = getDataInsentifDocument(request.form) 
+        if data == []:
+            data_array = np.array([['-','-','-','-','-','-','-','-','-']], dtype="str_")
+        else:
+            data_array = np.array(data, dtype="str_")
+        dataframe = pd.DataFrame(data_array, columns=["No", "Tanggal", "Tujuan", "Lama Tugas", "Insentif Perhari", "Kode Karyawan", "Kode Insentif", "Nama", "Total Didapat"])
+        column_fixed = dataframe[["No", "Tanggal", "Nama", "Tujuan", "Lama Tugas", "Insentif Perhari", "Total Didapat"]]
+        filename = getNamaDokumen("Data Insentif Periode", request.form) 
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            column_fixed.to_excel(writer, index=False, sheet_name='BONUS & INSENTIF')
+        output.seek(0)
+        return send_file(output, as_attachment=True, download_name=filename, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+
+@app.route('/download-lembur', methods =['GET', 'POST'])
+def downloadLembur():
+    if request.method == "GET": 
+        data = getDataKaryawan()
+        return render_template('Pages/download/lembur.html', data = data)
+    elif request.method == "POST":
+        data = getDataLemburDocument(request.form)
+        if data == []:
+            data_array = np.array([['-','-','-','-','-','-']], dtype="str_")
+        else:
+            data_array = np.array(data, dtype="str_")
+        dataframe = pd.DataFrame(data_array, columns=["No", "Tanggal", "Jumlah Lembur (JAM)", "Kode Karyawan", "Kode Lembur", "Nama"])
+        column_fixed = dataframe[["No", "Tanggal", "Nama", "Jumlah Lembur (JAM)"]]
+        filename = getNamaDokumen("Data Lembur Periode", request.form) 
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            column_fixed.to_excel(writer, index=False, sheet_name='LEMBUR')
+        output.seek(0)
+        return send_file(output, as_attachment=True, download_name=filename, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+
+@app.route('/download-izin-jam', methods=['GET', 'POST'])
+def downloadIzinJam():
+    if request.method == "GET":
+        data = getDataKaryawan()
+        return render_template('Pages/download/izin-jam.html', data = data)
+    elif request.method == "POST":
+        data = getDataIzinJamDocument(request.form)
+        if data == []:
+            data_array = np.array([['-','-','-','-','-','-','-','-','-','-']], dtype="str_")
+        else:
+            data_array = np.array(data, dtype="str_")
+        
+        dataframe = pd.DataFrame(data_array, columns=["No", "Tanggal", "Jam Mulai Izin", "Jam Akhir Izin", "Status", "Keterangan Izin", "Kode Karyawan", "Kode Izin Jam", "Total Jam Izin", "Nama"])
+        column_fixed = dataframe[["No", "Tanggal", "Nama", "Status", "Total Jam Izin", "Jam Mulai Izin", "Jam Akhir Izin", "Keterangan Izin"]]
+        filename = getNamaDokumen("Data Izin Jam Karyawan Periode", request.form)  
+        
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            column_fixed.to_excel(writer, index=False, sheet_name='IZIN JAM')
+        output.seek(0)
+        return send_file(output, as_attachment=True, download_name=filename, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+
+@app.route('/download-izin', methods =['GET', 'POST'])
+def downloadIzin():
+    if request.method == "GET":
+        data = getDataKaryawan()
+        return render_template('Pages/download/izin.html', data = data)
+    elif request.method == "POST":
+        data =  getDataIzinDocument(request.form)
+        
+        if data == []:
+            data_array = np.array([['-','-','-','-','-','-','-']], dtype="str_")
+        else:
+            data_array = np.array(data, dtype="str_")
+        
+        dataframe = pd.DataFrame(data_array, columns=["No", "Tanggal", "Status", "Keterangan", "Kode Karyawan", "Kode Izin", "Nama"])
+        column_fixed = dataframe[["No", "Tanggal", "Nama", "Status", "Keterangan"]]
+        filename = getNamaDokumen("Data Izin Karyawan Periode", request.form)
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            column_fixed.to_excel(writer, index=False, sheet_name='IZIN')
+        output.seek(0)
+        return send_file(output, as_attachment=True, download_name=filename, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+
+@app.route('/download-presensi', methods= ['GET', 'POST'])
+def downloadPresensi():
+    if request.method == "GET":
+        data = getDataKaryawan()
+        return render_template('Pages/download/presensi.html', data = data)
+    elif request.method == "POST":
+        data = getDataAbsenDocument(request.form)
+        filename = getNamaDokumen("Data Presensi Periode", request.form)
+
+        dt_length = len(data[0])
+        empty_value = []
+        i = 0
+        while i < dt_length:
+            empty_value.append('-')
+            i+=1
+        
+        if data == []:
+            data_array = np.array(empty_value, dtype="str_")
+        else:
+            data_array = np.array(data, dtype="str_")
+        
+        df = pd.DataFrame(data_array)
+        df.columns = df.iloc[0].values
+        df = df.drop(index=0, axis=0 )
+        df = df.reset_index(drop=True)
+        
+        
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False, sheet_name='PRESENSI')
+        output.seek(0)
+        return send_file(output, as_attachment=True, download_name=filename, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+
+@app.route('/download-gaji', methods=['GET', 'POST'])
+def downloadGaji():
+    if request.method == "GET":
+        data = getDataKaryawan()
+        return render_template('Pages/download/gaji.html', data = data)
+    elif request.method == "POST":
+        data = getDataGajiDocument(request.form) 
+        filename = getNamaDokumen("Data Presensi Periode", request.form)
+        print(data)
+        return 'ok'
 
 
 app.run(port=5000, debug=True)

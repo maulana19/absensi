@@ -2,7 +2,7 @@ from Databases.connect import db
 import pandas as pd
 
 from Function.hapusData import deleteKaryawan
-from Function.loadData import getDataKaryawan
+from Function.loadData import getDataKaryawan, getInsentifById
 
 def updateLibur(value, column, uid):
     cur = db.cursor()
@@ -81,3 +81,24 @@ def updateDataKaryawanBatch(data):
         cur.execute("UPDATE absensi SET id_karyawan = '"+str(nb[1])+"' WHERE id_karyawan = '"+str(nb[0])+"'")
         cur.execute("UPDATE karyawan SET nik='"+str(nb[1])+"' WHERE nik = '"+str(nb[0])+"'")
         db.commit()    
+
+def updateInsentif(data, id):
+    dataInsentif = getInsentifById(id)
+    cur = db.cursor()
+    if data['no_karyawan'] != "":
+        id_karyawan = data['no_karyawan'].split('-')
+        if len(id_karyawan) > 1:
+            if dataInsentif[1] != id_karyawan[0]:
+                cur.execute("UPDATE insentif SET id_karyawan = '"+str(id_karyawan[0])+"' WHERE kode_insentif = '"+str(id)+"'")    
+    if data['tanggal'] != "":
+        if dataInsentif[3] != data['tanggal']:
+            cur.execute("UPDATE insentif SET tanggal = '"+str(data['tanggal'])+"' WHERE kode_insentif = '"+str(id)+"'")
+    if data['tujuan'] != "":
+        if dataInsentif[4] != data['tujuan']:
+            cur.execute("UPDATE insentif SET tujuan = '"+str(data['tujuan'])+"' WHERE kode_insentif = '"+str(id)+"'")
+    if data['jumlah_hari'] != "":
+        if dataInsentif[6] != data['jumlah_hari']:
+            cur.execute("UPDATE insentif SET jumlah_hari = '"+str(data['jumlah_hari'])+"' WHERE kode_insentif = '"+str(id)+"'")
+    if data['insentif'] != "":
+        if dataInsentif[7] != data['insentif']:
+            cur.execute("UPDATE insentif SET insentif = '"+str(data['insentif'])+"' WHERE kode_insentif = '"+str(id)+"'")

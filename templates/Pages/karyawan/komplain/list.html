@@ -1,85 +1,86 @@
-<!doctype html>
-<html lang="en">
+{% extends 'base.html' %}
 
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Daftar Komplain Karyawan</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
-</head>
+{% block title %}
+    Daftar Komplain Karyawan
+{% endblock %}
 
-<body>
+{% block navbar %}
     <nav class="navbar navbar-light bg-success">
+        <a class="ms-3" style="text-decoration: none;color: white;font-weight: bold;" data-bs-toggle="offcanvas"
+            href="#offcanvasExample" role="button" aria-controls="offcanvasExample">
+            MENU
+        </a>
         <div class="container">
             <div class="ms-auto me-0 mt-2">
-                <form action="cari-insentif" method="get">
+                <form action="cari-komplain" method="get">
                     <div class="input-group mb-2">
-                        <input type="text" class="form-control" name="key" placeholder="Cari Karyawan" aria-label="Example text with button addon" aria-describedby="button-addon1">
+                        <input type="text" class="form-control" name="key" placeholder="Cari Komplain" aria-label="Example text with button addon" aria-describedby="button-addon1">
                         <button class="btn btn-outline-light" type="submit" id="button-addon1"><b>Cari</b></button>
                     </div>
                 </form>
             </div>
         </div>
     </nav>
-    <div class="container-fluid">
-        <div class="row">
-                <div class="col-md-12">
-                    <div class="card mt-2">
-                        <div class="ms-3 mt-2">
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+            <div class="col-md-12">
+                <div class="card mt-2">
+                    <div class="card-header">
+                        <div class="row">
+                            <div class="col-md-9 pt-2">
                             <p><b>Daftar Komplain Karyawan</b></p>
-                        </div>
-                        <hr>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table">
-                                    <thead>
-                                        <tr>
-                                            <th>#</th>
-                                            <th>Nama Karyawan</th>
-                                            <th>Jenis Komplain</th>
-                                            <th>Jumlah Komplain</th>
-                                            <th>Keterangan</th>
-                                            <th></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% if data %}
-                                            {% for d in data %}
-                                            <tr>
-                                                <td>{{ loop.index }}</td>
-                                                <td>{{ d[-1] }}</td>
-                                                <td>
-                                                    {% if d[1] == "tb" %}
-                                                        Penambahan (+)
-                                                    {% elif d[1] == "kr" %}
-                                                        Pengurangan (-)
-                                                    {% endif %}
-                                                </td>
-                                                <td>{{ d[2] }}</td>
-                                                <td>{{ d[3] }}</td>
-                                                <td>
-                                                    <a href="/update-komplain/{{ d[4] }}" class="btn btn-md btn-warning">Update</a>
-                                                    <a href="/hapus-komplain/{{ d[4] }}" class="btn btn-md btn-danger">Hapus</a>
-                                                </td>
-                                            </tr>
-                                            {% endfor %}
-                                        {% else %}
-                                            <tr>
-                                                <td colspan="6"><center>Data Tidak Ditemukan</center></td>
-                                            </tr>
-                                        {% endif %}
-                                    </tbody>
-                                </table>
+                            </div>
+                            <div class="col-md-3 text-end">
+                                <a href="/komplain/tambah-baru" class="btn btn-success btn-md">Tambah Komplain Gaji Karyawan</a>
                             </div>
                         </div>
                     </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Nama Karyawan</th>
+                                        <th>Jenis Komplain</th>
+                                        <th>Jumlah Komplain</th>
+                                        <th>Keterangan</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% if data %}
+                                        {% for d in data %}
+                                        <tr>
+                                            <td>{{ loop.index }}</td>
+                                            <td>{{ d[-1] }}</td>
+                                            <td>
+                                                {% if d[1] == "tb" %}
+                                                    Penambahan (+)
+                                                {% elif d[1] == "kr" %}
+                                                    Pengurangan (-)
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ d[2] }}</td>
+                                            <td>{{ d[3] }}</td>
+                                            <td>
+                                                <a href="/update-komplain/{{ d[4] }}" class="btn btn-md btn-warning">Update</a>
+                                                <a href="/hapus-komplain/{{ d[4] }}" class="btn btn-md btn-danger">Hapus</a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    {% else %}
+                                        <tr>
+                                            <td colspan="6"><center>Data Tidak Ditemukan</center></td>
+                                        </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
-        </div>
+            </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q"
-        crossorigin="anonymous"></script>
-</body>
-
-</html>
+{% endblock %}

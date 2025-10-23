@@ -1,6 +1,6 @@
 import locale
 from Databases.connect import db
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 import pandas as pd
 from dateutil.relativedelta import relativedelta
 from collections import defaultdict
@@ -135,9 +135,9 @@ def getDataAbsenTable(tanggal):
                     cursor3.execute("SELECT * FROM absensi WHERE id_karyawan = '"+str(d[2])+"' AND tanggal = '"+str(t)+"'")
                     res3 = cursor3.fetchone()
                     if res3:
-                        d.append('1')
+                        d.append('')
                     else:
-                        d.append('0')
+                        d.append('A')
         data_absen.append(d)
     return(data_absen)
 
@@ -235,9 +235,9 @@ def searchDataAbsenTable(key, tanggal):
                     cursor3.execute("SELECT * FROM absensi WHERE id_karyawan = '"+str(d[2])+"' AND tanggal = '"+str(t)+"'")
                     res3 = cursor3.fetchone()
                     if res3:
-                        d.append('1')
+                        d.append('')
                     else:
-                        d.append('0')
+                        d.append('A')
         data_absen.append(d)
     return(data_absen)
 
@@ -295,12 +295,22 @@ def hitungHariKerja(karyawan):
     harikerja = 0
     for t in tanggal:
         cur = db.cursor()
-        cur.execute("SELECT * FROM absensi WHERE tanggal = '"+t.strftime('%Y-%m-%d')+"' AND id_karyawan = "+ str(karyawan) +" LIMIT 1")
+        cur.execute("SELECT * FROM absensi WHERE tanggal = '"+t.strftime('%Y-%m-%d')+"' AND id_karyawan = '"+ str(karyawan) +"' LIMIT 1")
         res = cur.fetchone()
         if res:
             if res[1] not in tanggal_libur:
                 harikerja+=1
     return harikerja
+
+def hitungHariLibur(tanggal_libur):
+    total_libur = 0
+    cur = db.cursor()
+    for l in tanggal_libur:    
+        cur.execute("SELECT * FROM libur WHERE tanggal = '"+l+"' limit 1")
+        res = cur.fetchone()
+        if res:
+            total_libur += 1
+    return total_libur
 
 def hitungHariTidakKerja(id, izin):
     tanggal = getHeaderAbsen()
@@ -346,6 +356,23 @@ def getInsentif():
     cur.execute("SELECT karyawan.nama, karyawan.nik, insentif.* FROM insentif JOIN karyawan ON insentif.id_karyawan = karyawan.nik")
     res = cur.fetchall()
     return res
+def searchInsentif(key):
+    data = []
+    cur = db.cursor()
+    cur.execute("SELECT karyawan.nama, karyawan.nik, insentif.* FROM insentif JOIN karyawan ON insentif.id_karyawan = karyawan.nik where karyawan.nama LIKE '%"+str(key)+"%'")
+    res = cur.fetchall()
+    for i in res:
+        insentif = list(i)
+        insentif.append(locale.currency(int(int(i[5]) * int(i[6])), grouping=True))
+        insentif[6] = locale.currency(int(i[6]), grouping=True)
+        data.append(insentif)
+    return data
+
+def getInsentifById(id):
+    cur = db.cursor()
+    cur.execute("SELECT karyawan.nama, karyawan.nik, insentif.* FROM insentif JOIN karyawan ON insentif.id_karyawan = karyawan.nik WHERE kode_insentif = '"+str(id)+"' limit 1")
+    res = cur.fetchone()
+    return res
 
 def getTotalnsentif(id):
     date_obj = date.today()
@@ -360,6 +387,7 @@ def getTotalnsentif(id):
     for i in res:
         totalinsentif += (int(i[3])*int(i[4]))
     return totalinsentif
+
 
 def getPinjamanPajak():
     date_obj = datetime.today()
@@ -397,6 +425,17 @@ def getPinjamanPajak():
             
             data.append(in_data)
 
+    return data
+
+def searchPinjamanPajak(key):
+    data = []
+    cur = db.cursor()
+    cur.execute("SELECT pinjaman_pajak.*, karyawan.nama FROM pinjaman_pajak JOIN karyawan on karyawan.nik = pinjaman_pajak.id_karyawan where karyawan.nama LIKE '%"+str(key)+"%'")
+    res = cur.fetchall()
+    for d in res:
+        dt = list(d)
+        dt[2] = locale.currency(int(d[2]), grouping=True)
+        data.append(dt)
     return data
 
 def getDataPinjamanPajakById(id):
@@ -453,3 +492,218 @@ def getDataKomplainByName(id, now):
             else:
                 data = int(i[2])
     return data
+
+def searchKomplain(key):
+    cur = db.cursor()
+    cur.execute("SELECT komplain.*, karyawan.nama FROM komplain JOIN karyawan ON komplain.id_karyawan = karyawan.nik WHERE karyawan.nama LIKE '%"+str(key)+"%'")
+    res = cur.fetchall()
+    return res
+
+def getDatakomplainDocument(data):
+    tanggal_data = []
+    datares = []
+    start_period = datetime.strptime(data['mulai'], "%Y-%m-%d")
+    end_period = datetime.strptime(data['akhir'], "%Y-%m-%d")
+
+    delta = end_period - start_period
+    for d in range(delta.days +1):
+        tanggal_data.append(datetime.strftime(start_period + timedelta(days = d), "%Y-%m-%d"))        
+
+    cur = db.cursor()
+    if 'semuaData' in data and data['semuaData'] == "on":
+        cur.execute('SELECT komplain.*, karyawan.nama FROM komplain JOIN karyawan on komplain.id_karyawan = karyawan.nik')    
+    elif 'no_karyawan' in data and data['no_karyawan'] != "":
+        cur.execute("SELECT komplain.*, karyawan.nama FROM komplain JOIN karyawan on komplain.id_karyawan = karyawan.nik WHERE komplain.id_karyawan ='"+data['no_karyawan'].split('-')[0]+"'")
+    res = cur.fetchall()
+    for r in res:
+        if r[6] in tanggal_data:
+            lst = list(r)
+            if r[1] == 'tb':
+                lst[1] = 'Penambahan Gaji'
+            if r[1] == 'kr':
+                lst[1] = 'Pengurangan Gaji'
+            datares.append(lst)
+    return datares
+
+def getDataPinjamanPajakDocument(data):
+    
+    tanggal_data = []
+    datares = []
+    start_period = datetime.strptime(data['mulai'], "%Y-%m-%d")
+    end_period = datetime.strptime(data['akhir'], "%Y-%m-%d")
+
+    delta = end_period - start_period
+    for d in range(delta.days +1):
+        tanggal_data.append(datetime.strftime(start_period + timedelta(days = d), "%Y-%m-%d"))        
+
+    cur = db.cursor()
+    if 'semuaData' in data and data['semuaData'] == "on":
+        cur.execute('SELECT pinjaman_pajak.*, karyawan.nama FROM pinjaman_pajak JOIN karyawan on pinjaman_pajak.id_karyawan = karyawan.nik')    
+    elif 'no_karyawan' in data and data['no_karyawan'] != "":
+        cur.execute("SELECT pinjaman_pajak.*, karyawan.nama FROM pinjaman_pajak JOIN karyawan on pinjaman_pajak.id_karyawan = karyawan.nik WHERE pinjaman_pajak.id_karyawan ='"+data['no_karyawan'].split('-')[0]+"'")
+    res = cur.fetchall()
+    for r in res:
+        lst = list(r)
+        if r[3] in tanggal_data:
+            if r[1] == 'pnj':
+                lst[1] = 'Pinjaman'
+            if r[1] == 'kr':
+                lst[1] = 'Pajak'
+        if r[3] == '':
+            lst[3] = '-'
+        
+        datares.append(lst)
+    return datares
+
+def getDataInsentifDocument(data):
+    tanggal_data = getDateRange(data['mulai'], data['akhir'])
+    datares = []
+    cur = db.cursor()
+    if 'semuaData' in data and data['semuaData'] == "on":
+        cur.execute('SELECT insentif.*, karyawan.nama FROM insentif JOIN karyawan on insentif.id_karyawan = karyawan.nik')    
+    elif 'no_karyawan' in data and data['no_karyawan'] != "":
+        cur.execute("SELECT insentif.*, karyawan.nama FROM insentif JOIN karyawan on insentif.id_karyawan = karyawan.nik WHERE insentif.id_karyawan ='"+data['no_karyawan'].split('-')[0]+"'")
+    res = cur.fetchall()
+    for r in res:
+        lst = list(r)
+        if lst[1] in tanggal_data:
+            ttl_insenif = locale.currency(int(lst[3]) * int(lst[4]), grouping=True)
+            if 'Rp' in ttl_insenif:
+                ttl_insenif = ttl_insenif.replace('Rp', 'Rp ')
+            lst.append(ttl_insenif)
+            if lst[4] != '':
+                cr = locale.currency(int(lst[4]), grouping=True)
+                if 'Rp' in cr:
+                    cr = cr.replace('Rp', 'Rp ')
+                lst[4] = cr
+            datares.append(lst)
+    return datares
+
+def getDataLemburDocument(data):
+    tanggal_data = getDateRange(data['mulai'], data['akhir'])
+    datares = []
+
+    cur = db.cursor()
+    if 'semuaData' in data and data['semuaData'] == "on":
+        cur.execute('SELECT lembur.*, karyawan.nama FROM lembur JOIN karyawan on lembur.id_karyawan = karyawan.nik')    
+    elif 'no_karyawan' in data and data['no_karyawan'] != "":
+        cur.execute("SELECT lembur.*, karyawan.nama FROM lembur JOIN karyawan on lembur.id_karyawan = karyawan.nik WHERE lembur.id_karyawan ='"+data['no_karyawan'].split('-')[0]+"'")
+    res = cur.fetchall()
+    for r in res:
+        lst = list(r)
+        if lst[1] in tanggal_data:        
+            datares.append(lst)
+    return datares
+
+def getDataIzinJamDocument(data):
+    tanggal_data = getDateRange(data['mulai'], data['akhir'])
+    datares = []
+
+    cur = db.cursor()
+    if 'semuaData' in data and data['semuaData'] == "on":
+        cur.execute('SELECT izin_jam.*, karyawan.nama FROM izin_jam JOIN karyawan on izin_jam.id_karyawan = karyawan.nik')    
+    elif 'no_karyawan' in data and data['no_karyawan'] != "":
+        cur.execute("SELECT izin_jam.*, karyawan.nama FROM izin_jam JOIN karyawan on izin_jam.id_karyawan = karyawan.nik WHERE izin_jam.id_karyawan ='"+data['no_karyawan'].split('-')[0]+"'")
+    res = cur.fetchall()
+    for r in res:
+        lst = list(r)
+        if lst[1] in tanggal_data: 
+            if lst[4] == "T":
+                lst[4] = "Terlambat"
+            elif lst[4] == "PA":
+                lst[4] = "Pulang Awal"
+            elif lst[4] == "MP":
+                lst[4] = "Meninggalkan Pekerjaan"
+            datares.append(lst)
+    return datares
+
+def getDataIzinDocument(data):
+    tanggal_data = getDateRange(data['mulai'], data['akhir'])
+    datares = []
+
+    cur = db.cursor()
+    if 'semuaData' in data and data['semuaData'] == "on":
+        cur.execute('SELECT izin.*, karyawan.nama FROM izin JOIN karyawan on izin.id_karyawan = karyawan.nik')    
+    elif 'no_karyawan' in data and data['no_karyawan'] != "":
+        cur.execute("SELECT izin.*, karyawan.nama FROM izin JOIN karyawan on izin.id_karyawan = karyawan.nik WHERE izin.id_karyawan ='"+data['no_karyawan'].split('-')[0]+"'")
+    res = cur.fetchall()
+    for r in res:
+        if r[1] in tanggal_data:
+            lst = list(r)
+            if lst[2] == "C":
+                lst[2] = "Cuti"
+            if lst[2] == "I":
+                lst[2] = "Izin"
+            if lst[2] == "IK":
+                lst[2] = "Izin Khusus"
+            if lst[2] == "S":
+                lst[2] = "Sakit"
+            datares.append(lst)
+
+    return datares
+
+def getDataAbsenDocument(data):
+    tanggal_data = getDateRange(data['mulai'], data['akhir'])
+    if 'semuaData' in data and data['semuaData'] == "on":
+        dataAbsen = getDataAbsenTable(tanggal_data)
+    elif 'no_karyawan' in data and data['no_karyawan'] != "":
+        dataAbsen = searchDataAbsenTable(data['no_karyawan'].split('-')[1] , tanggal_data)
+
+    header = ['No', 'Nama', 'Kode Karyawan'] + tanggal_data
+    dataAbsen.insert(0,header)
+    return dataAbsen
+
+def getDataGajiDocument(data): 
+    tanggal = getDateRange(data['mulai'], data['akhir'])
+    totalhariLibur = hitungHariLibur(tanggal)
+    if 'semuaData' in data and data['semuaData'] == "on":
+        data_karyawan = getDataKaryawan()
+        for d in data_karyawan:
+            totalhariKerja = hitungHariKerja(d[1])
+            totalhariizin = hitungHariTidakKerja(d[1], "I")
+            totalharicuti = hitungHariTidakKerja(d[1], "C")
+            totalharisakit = hitungHariTidakKerja(d[1], "S")
+            totalhariizinkhusus = hitungHariTidakKerja(d[1], "IK")
+            totalharialpha = len(tanggal) - totalhariKerja - totalhariizin - totalharicuti - totalharisakit - totalhariizinkhusus - totalhariLibur
+            
+            dataGajiKaryawan = getGajiKaryawan(d[1])
+            gaji_pokok = dataGajiKaryawan[0] if dataGajiKaryawan[0] != None else 0
+            tunjangan_jabatan = dataGajiKaryawan[1] if dataGajiKaryawan[1] != None else 0
+            tunjangan_keahlian = dataGajiKaryawan[2] if dataGajiKaryawan[2] != None else 0
+            tunjangan_lain = dataGajiKaryawan[3] if dataGajiKaryawan[3] != None else 0
+            upah_total = gaji_pokok+tunjangan_jabatan+tunjangan_keahlian+tunjangan_lain
+
+            lembur = getJamLembur(d[1])
+            insentif = getTotalnsentif(d[1])
+            
+            gajiKotor= upah_total+lembur+insentif
+            print(gajiKotor)
+    return totalhariLibur
+
+def getDateRange(mulai, akhir):
+    tanggal_data = []
+    start_period = datetime.strptime(mulai, "%Y-%m-%d")
+    end_period = datetime.strptime(akhir, "%Y-%m-%d")
+
+    delta = end_period - start_period
+    for d in range(delta.days +1):
+        tanggal_data.append(datetime.strftime(start_period + timedelta(days = d), "%Y-%m-%d"))        
+    return tanggal_data
+
+def getNamaDokumen(nama, data):
+    namaFile = str(nama)
+    tanggal_mulai = datetime.strftime(datetime.strptime(data['mulai'], '%Y-%m-%d'), '%d %b %Y')
+    tanggal_akhir = datetime.strftime(datetime.strptime(data['akhir'], '%Y-%m-%d'), '%d %b %Y')
+    namaFile+=' '
+    namaFile+=tanggal_mulai
+    namaFile+= ' - '
+    namaFile+=tanggal_akhir
+    namaFile+=" | "
+    if 'semuaData' in data and data['semuaData'] == "on":
+        namaFile+="Semua Data"
+    elif 'no_karyawan' in data and data['no_karyawan'] != "":
+        namaFile+=data['no_karyawan'].split('-')[1]
+    
+    namaFile+=".xlsx"
+
+    return namaFile

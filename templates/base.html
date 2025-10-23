@@ -46,11 +46,11 @@
                     <li class="mb-1 nav-item">
                         <a href="#" class="nav-link  {{ 'collapsed' if request.path == '/absensi' }}" aria-current="page" data-bs-toggle="collapse"
                             data-bs-target="#dashboard-collapse" style="color: black;" aria-expanded=" {{ 'true' if request.path == '/absensi'else 'false' }}">
-                            ABSENSI
+                            PRESENSI
                         </a>
                         <div class="collapse  {{ 'show' if request.path == '/absensi' }} {{ 'show' if request.path == '/izin' }} {{ 'show' if request.path == '/izin-jam' }} {{ 'show' if request.path == '/lembur' }} {{ 'show' if request.path == '/libur' }} ms-2" id="dashboard-collapse">
                             <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small">
-                                <li><a href="/absensi" class="nav-link  {{ 'aktif' if request.path == '/absensi' }} link-dark">Rekap Absensi</a></li>
+                                <li><a href="/absensi" class="nav-link  {{ 'aktif' if request.path == '/absensi' }} link-dark">Rekap Presensi</a></li>
                                 <li><a href="/izin" class="nav-link link-dark {{ 'aktif' if request.path == '/izin' }}">Izin</a></li>
                                 <li><a href="/izin-jam" class="nav-link link-dark {{ 'aktif' if request.path == '/izin-jam' }}">Izin (Jam)</a></li>
                                 <li><a href="/lembur" class="nav-link link-dark {{ 'aktif' if request.path == '/lembur' }}">Lembur</a></li>
@@ -79,12 +79,29 @@
                             data-bs-target="#add-data-collapse" style="color: black;" aria-expanded=" {{ 'true' if request.path == '/tambah-absen' else 'false' }}">
                             TAMBAH DATA (MASSAL)
                         </a>
-                        <div class="collapse  {{ 'show' if request.path == '/tambah-absen' }} ms-2" id="add-data-collapse">
+                        <div class="collapse  {{ 'show' if request.path == '/tambah-absen' }} {{ 'show' if request.path == '/tambah-gaji' }} ms-2" id="add-data-collapse">
                             <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small">
-                                <li><a href="/tambah-absen" class="nav-link  {{ 'aktif' if request.path == '/tambah-absen' }} link-dark rounded">TAMBAH ABSENSI</a></li>
-                                <li><a href="#" class="nav-link link-dark rounded">Weekly</a></li>
-                                <li><a href="#" class="nav-link link-dark rounded">Monthly</a></li>
-                                <li><a href="#" class="nav-link link-dark rounded">Annually</a></li>
+                                <li><a href="/tambah-absen" class="nav-link  {{ 'aktif' if request.path == '/tambah-absen' }} link-dark rounded">Tambah Absensi</a></li>
+                                <li><a href="/tambah-gaji" class="nav-link {{ 'aktif' if request.path == '/tambah-gaji' }} link-dark rounded">Tambah Gaji</a></li>
+                            </ul>
+                        </div>
+                    </li>
+                    <li class="mb-1 nav-item">
+                        <a href="#" class="nav-link" aria-current="page" data-bs-toggle="collapse"
+                            data-bs-target="#download-data-collapse" style="color: black;" aria-expanded="false">
+                            DOWNLOAD DATA
+                        </a>
+                        <div class="collapse ms-2" id="download-data-collapse">
+                            <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small">
+                                <li><a href="/" class="nav-link link-dark rounded">Download Data Lengkap</a></li>
+                                <li><a href="/download-gaji" class="nav-link link-dark rounded">Download Gaji Karyawan</a></li>
+                                <li><a href="/download-presensi" class="nav-link link-dark rounded">Download Presensi</a></li>
+                                <li><a href="/download-izin" class="nav-link link-dark rounded">Download Izin</a></li>
+                                <li><a href="/download-izin-jam" class="nav-link link-dark rounded">Download Izin Jam</a></li>
+                                <li><a href="/download-lembur" class="nav-link link-dark rounded">Download Lembur</a></li>
+                                <li><a href="/download-insentif" class="nav-link link-dark rounded">Download Insentif</a></li>
+                                <li><a href="/download-pinjaman-pajak" class="nav-link link-dark rounded">Download Pinjaman dan Pajak Karyawan</a></li>
+                                <li><a href="/download-komplain" class="nav-link link-dark rounded">Download Komplain Karyawan</a></li>
                             </ul>
                         </div>
                     </li>
@@ -95,7 +112,64 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q"
         crossorigin="anonymous"></script>
-    <script src="https://kit.fontawesome.com/7588abbba4.js" crossorigin="anonymous"></script>
+    
+    {% if request.path == "/pinjaman-pajak/tambah-baru" %}
+        <script lang="javascript">
+            jenis = document.getElementById('jenis_potongan')
+            button = document.getElementById("save-button")
+            conditionalField = document.getElementById("conditionalField")
+            batas_berlaku = document.getElementById("batas_berlaku")
+
+            jenis.addEventListener("change", function(){
+                if(jenis.value != ''){
+                    button.removeAttribute("disabled")
+                }
+                if(jenis.value == 'pnj'){
+                    batas_berlaku.removeAttribute("disabled")
+                    conditionalField.removeAttribute("style")
+                    batas_berlaku.setAttribute("required", "required")
+                }else if(jenis.value == 'pjk'){
+                    batas_berlaku.setAttribute("disabled", "disabled")
+                    conditionalField.setAttribute("style", "display:none")
+                    batas_berlaku.removeAttribute("required")
+                }
+            })
+
+            if(jenis.value == ''){
+                button.setAttribute("disabled", "disabled")
+                batas_berlaku.setAttribute("disabled", "disabled")
+                conditionalField.setAttribute("style", "display:none")
+            }
+        </script>
+    {% endif %}
+    {% if  request.path == "/download-komplain" or '/download-pinjaman-pajak' or '/download-insentif' or '/download-lembur' or '/download-izin-jam' or '/download-izin' %}
+        <script>
+            allData = document.getElementById("allData")
+            hideElement = document.getElementById("hide")
+            karyawan = document.getElementById("karyawan")
+            
+            allData.checked = true
+            isSelectAllData()
+            function isSelectAllData(){
+                allData = document.getElementById("allData")
+                hideElement = document.getElementById("hide")
+                karyawan = document.getElementById("karyawan")
+                if(allData.checked){
+                    karyawan.setAttribute("disabled", "disabled")
+                    hideElement.setAttribute("style", "display:none")
+                }else{ 
+                    karyawan.removeAttribute("disabled")
+                    hideElement.removeAttribute("style")
+                }
+
+                if(karyawan.value != ""){
+                    allData.setAttribute("disabled", "disabled")
+                }else{ 
+                    allData.removeAttribute("disabled")
+                }
+            }
+        </script>
+    {% endif %}
 </body>
 
 </html>
