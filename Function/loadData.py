@@ -455,13 +455,12 @@ def getPajak(id):
     else:
         return [0]
     
-def getPinjaman(id, now):
+def getPinjaman(id, tanggal):
     cur = db.cursor()
     cur.execute("SELECT pinjaman_pajak.jumlah, pinjaman_pajak.berlaku FROM pinjaman_pajak WHERE id_karyawan = '"+id+"' AND jenis_pot = 'pnj' limit 1")
     res = cur.fetchone()
     if res:
-        tanggal = datetime.strptime(res[1], "%Y-%m-%d")
-        if tanggal >= now:
+        if res[1] in tanggal:
             return res
         else:        
             return [0]
@@ -480,13 +479,13 @@ def getDataKomplainById(id):
     res = cur.fetchone()
     return res
 
-def getDataKomplainByName(id, now):
+def getDataKomplainByName(id, tanggal):
     data = 0
     cur = db.cursor()
     cur.execute("SELECT * FROM komplain where id_karyawan = '"+str(id)+"'")
     res = cur.fetchall()
     for i in res:
-        if now <= datetime.strptime(i[6],"%Y-%m-%d"):
+        if i[6] in tanggal:
             if i[1] == 'kr':
                 data = -int(i[2])
             else:
@@ -579,6 +578,21 @@ def getDataInsentifDocument(data):
             datares.append(lst)
     return datares
 
+def getDataLemburByDate(data):
+    tanggal_data = getDateRange(data['mulai'], data['akhir'])
+    datares = []
+
+    cur = db.cursor()
+    if 'semuaData' in data and data['semuaData'] == "on":
+        cur.execute('SELECT lembur.*, karyawan.nama FROM lembur JOIN karyawan on lembur.id_karyawan = karyawan.nik')    
+    elif 'no_karyawan' in data and data['no_karyawan'] != "":
+        cur.execute("SELECT lembur.*, karyawan.nama FROM lembur JOIN karyawan on lembur.id_karyawan = karyawan.nik WHERE lembur.id_karyawan ='"+data['no_karyawan'].split('-')[0]+"'")
+    res = cur.fetchall()
+    for r in res:
+        lst = list(r)
+        if lst[1] in tanggal_data:        
+            datares.append(lst)
+    return datares
 def getDataLemburDocument(data):
     tanggal_data = getDateRange(data['mulai'], data['akhir'])
     datares = []
@@ -656,6 +670,7 @@ def getDataAbsenDocument(data):
 def getDataGajiDocument(data): 
     tanggal = getDateRange(data['mulai'], data['akhir'])
     totalhariLibur = hitungHariLibur(tanggal)
+    data_fix = []
     if 'semuaData' in data and data['semuaData'] == "on":
         data_karyawan = getDataKaryawan()
         for d in data_karyawan:
@@ -673,12 +688,38 @@ def getDataGajiDocument(data):
             tunjangan_lain = dataGajiKaryawan[3] if dataGajiKaryawan[3] != None else 0
             upah_total = gaji_pokok+tunjangan_jabatan+tunjangan_keahlian+tunjangan_lain
 
-            lembur = getJamLembur(d[1])
+            lembur = getJamLembur(d[1])*15897
             insentif = getTotalnsentif(d[1])
             
             gajiKotor= upah_total+lembur+insentif
-            print(gajiKotor)
-    return totalhariLibur
+            totalizinperjam = hitungIzinJam(d[1])
+            potonganIzin = (int(upah_total)/25) * (int(totalhariizin) + int(totalharialpha))
+            potonganIzinJam = (int(upah_total)/25)/7 * (int(totalizinperjam))
+            potonganPajak = int(getPajak(d[1])[0])
+            potonganPinjaman = int(getPinjaman(d[1], tanggal)[0])
+            komplain = getDataKomplainByName(d[1], tanggal)
+            gaji_bersih = int(gajiKotor) - int(potonganIzin) - int(potonganIzinJam) - int(potonganPajak) - int(potonganPinjaman) + komplain
+            data_fix.append(
+                [
+                    d[0],d[1], d[2], 
+                    totalhariKerja, totalizinperjam, totalhariizin, totalharicuti, 
+                    totalharisakit, totalhariizinkhusus, totalharialpha,
+                    locale.currency(gaji_pokok, grouping=True), 
+                    locale.currency(tunjangan_jabatan, grouping=True),
+                    locale.currency(tunjangan_keahlian, grouping=True),
+                    locale.currency(tunjangan_lain, grouping=True),
+                    locale.currency(upah_total, grouping=True),
+                    locale.currency(lembur, grouping=True),
+                    locale.currency(insentif, grouping=True),
+                    locale.currency(gajiKotor, grouping=True),
+                    locale.currency(potonganIzin, grouping=True),
+                    locale.currency(potonganIzinJam, grouping=True),
+                    locale.currency(potonganPajak, grouping=True),
+                    locale.currency(potonganPinjaman, grouping=True),
+                    locale.currency(komplain, grouping=True),
+                    locale.currency(gaji_bersih, grouping=True),
+                ])
+    return data_fix
 
 def getDateRange(mulai, akhir):
     tanggal_data = []
@@ -687,7 +728,7 @@ def getDateRange(mulai, akhir):
 
     delta = end_period - start_period
     for d in range(delta.days +1):
-        tanggal_data.append(datetime.strftime(start_period + timedelta(days = d), "%Y-%m-%d"))        
+        tanggal_data.append(datetime.strftime(start_period + timedelta(days = d), "%Y-%m-%d")) 
     return tanggal_data
 
 def getNamaDokumen(nama, data):

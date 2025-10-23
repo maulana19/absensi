@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Download Semua Data Penggajian
+{% endblock %}
+
+{% block navbar %}
+    <nav class="navbar navbar-light bg-success" style="position: sticky;">
+        <a class="ms-3" style="text-decoration: none;color: white;font-weight: bold;" data-bs-toggle="offcanvas"
+            href="#offcanvasExample" role="button" aria-controls="offcanvasExample">
+            MENU
+        </a>
+    </nav>
+{% endblock %}
+
+
+{% block content %}
+    <div class="card mt-3">
+        <form action="/download-data-lengkap" method="post" class=" mt-1 ms-3 mb-3">
+            <div class="row">
+                <div class="col-md-3">
+                    <h6><b>Tanggal Mulai</b></h6>
+                    <input type="date" name="mulai" required class="form-control" id="">
+                </div>
+                <div class="col-md-3">
+                    <h6><b>Tanggal Akhir</b></h6>
+                    <input type="date" name="akhir" required class="form-control" id="">
+                </div>
+                <div class="col-md-6">
+                    <h6><b>Data yang Ditampilkan</b></h6>
+                    <div class="row"> 
+                        <div class="col-md-3 mt-1"> 
+                            <div class="form-check">
+                                <input class="form-check-input" id="allData" onchange="isSelectAllData()" type="checkbox" name="semuaData">
+                                <label class="form-check-label" for="flexCheckDefault">
+                                    Semua Data
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-6" id="hide">
+                            <input type="text" onchange="isSelectAllData()" id="karyawan" list="karyawanList" name="no_karyawan" class="form-control" placeholder="Silahkan Pilih Karyawan yang Izin">
+                            <datalist id="karyawanList">
+                                {% for d in data %}
+                                    <option value="{{ d[1] }}-{{ d[2] }}">{{ d[1] }} - {{ d[2] }}</option>
+                                {% endfor %}
+                            </datalist>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-12 mt-3">
+                    <button type="submit" class="btn btn-success btn-md">Download Dokumen</button>
+                </div>
+            </div>
+        </form>
+    </div>
+{% endblock %}

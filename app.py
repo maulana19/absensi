@@ -1,10 +1,12 @@
 import io
-from flask import Flask, jsonify, request, render_template,redirect, send_file
+from flask import Flask, request, render_template,redirect, send_file
 import numpy as np
 import pandas as pd
 import os
+import waitress
 
 from Databases.connect import db
+from Function.dataDokumenDownload import gajiDownloadData, insentifDownloadData, izinDownloadData, izinJamDownloadData, komplainDownloadData, lemburDownloadData, pinjamanPajakDownloadData, presensiDownloadData
 from Function.loadData import *
 from Function.DataKaryawan import getNamaKaryawan, insertJadwal, updateKaryawan
 import locale
@@ -320,7 +322,6 @@ def cari_lembur():
 @app.route('/gaji-karyawan', methods=['GET'])
 def gajikaryawan():
     data = []
-    tanggal_sekarang = datetime.now()
     data_karyawan = getDataKaryawan()
     tanggal_header = getHeaderAbsen()
     tanggal = []
@@ -351,11 +352,10 @@ def gajikaryawan():
             totalizinperjam = hitungIzinJam(d[1])
             potonganIzin = (int(upah_total)/25) * (int(totalhariizin) + int(totalharialpha))
             potonganIzinJam = (int(upah_total)/25)/7 * (int(totalizinperjam))
-
             potonganPajak = int(getPajak(d[1])[0])
-            potonganPinjaman = int(getPinjaman(d[1], tanggal_sekarang)[0])
+            potonganPinjaman = int(getPinjaman(d[1], tanggal)[0])
 
-            komplain = getDataKomplainByName(d[1], tanggal_sekarang)
+            komplain = getDataKomplainByName(d[1], tanggal)
             
             gaji_bersih = int(gajiKotor) - int(potonganIzin) - int(potonganIzinJam) - int(potonganPajak) - int(potonganPinjaman) + komplain
             data.append(
@@ -631,17 +631,11 @@ def downloadKomplain():
         data = getDataKaryawan()
         return render_template('Pages/download/komplain.html', data = data)
     if request.method == "POST":
-        data = getDatakomplainDocument(request.form)
-        if data == []:
-            data_array = np.array([['-','-','-','-','-','-','-','-']], dtype="str_")
-        else:
-            data_array = np.array(data, dtype="str_")
-        dataframe = pd.DataFrame(data_array, columns=["No", "Jenis Komplain", "Jumlah Komplain", "Keterangan", "Kode Komplain", "Kode Karyawan", "Tanggal", "Nama"])
-        column_fixed = dataframe[["No", "Tanggal", "Kode Karyawan", "Nama", "Jenis Komplain", "Jumlah Komplain", "Keterangan"]]
+        dt = komplainDownloadData(request.form)
         filename = getNamaDokumen('Data Komplain Periode', request.form)
         output = io.BytesIO()
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            column_fixed.to_excel(writer, index=False, sheet_name='Sheet1')
+            dt.to_excel(writer, index=False, sheet_name='Sheet1')
         output.seek(0)
         return send_file(output, as_attachment=True, download_name=filename, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
@@ -651,19 +645,11 @@ def downloadPinjamanPajak():
         data = getDataKaryawan()
         return render_template('Pages/download/pinjaman-pajak.html', data = data)
     if request.method == "POST":
-        data = getDataPinjamanPajakDocument(request.form)
-        
-        if data == []:
-            data_array = np.array([['-','-','-','-','-','-','-']], dtype="str_")
-        else:
-            data_array = np.array(data, dtype="str_")
-        
-        dataframe = pd.DataFrame(data_array, columns=["No", "Jenis Potongan", "Jumlah Potongan", "Masa Berlaku", "Kode Karyawan", "Kode Pinjaman", "Nama"])
-        column_fixed = dataframe[["No", "Kode Karyawan", "Nama", "Jenis Potongan", "Jumlah Potongan", "Masa Berlaku"]]
         filename = getNamaDokumen("Data Pinjaman dan Pajak Periode", request.form) 
+        dt = pinjamanPajakDownloadData(request.form)
         output = io.BytesIO()
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            column_fixed.to_excel(writer, index=False, sheet_name='Sheet1')
+            dt.to_excel(writer, index=False, sheet_name='Sheet1')
         output.seek(0)
         return send_file(output, as_attachment=True, download_name=filename, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
@@ -673,17 +659,11 @@ def downloadInsentif():
         data = getDataKaryawan()
         return render_template('Pages/download/insentif.html', data = data)
     if request.method == "POST":
-        data = getDataInsentifDocument(request.form) 
-        if data == []:
-            data_array = np.array([['-','-','-','-','-','-','-','-','-']], dtype="str_")
-        else:
-            data_array = np.array(data, dtype="str_")
-        dataframe = pd.DataFrame(data_array, columns=["No", "Tanggal", "Tujuan", "Lama Tugas", "Insentif Perhari", "Kode Karyawan", "Kode Insentif", "Nama", "Total Didapat"])
-        column_fixed = dataframe[["No", "Tanggal", "Nama", "Tujuan", "Lama Tugas", "Insentif Perhari", "Total Didapat"]]
+        dt = insentifDownloadData(request.form)
         filename = getNamaDokumen("Data Insentif Periode", request.form) 
         output = io.BytesIO()
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            column_fixed.to_excel(writer, index=False, sheet_name='BONUS & INSENTIF')
+            dt.to_excel(writer, index=False, sheet_name='BONUS & INSENTIF')
         output.seek(0)
         return send_file(output, as_attachment=True, download_name=filename, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
@@ -693,17 +673,11 @@ def downloadLembur():
         data = getDataKaryawan()
         return render_template('Pages/download/lembur.html', data = data)
     elif request.method == "POST":
-        data = getDataLemburDocument(request.form)
-        if data == []:
-            data_array = np.array([['-','-','-','-','-','-']], dtype="str_")
-        else:
-            data_array = np.array(data, dtype="str_")
-        dataframe = pd.DataFrame(data_array, columns=["No", "Tanggal", "Jumlah Lembur (JAM)", "Kode Karyawan", "Kode Lembur", "Nama"])
-        column_fixed = dataframe[["No", "Tanggal", "Nama", "Jumlah Lembur (JAM)"]]
+        dt = lemburDownloadData(request.form)
         filename = getNamaDokumen("Data Lembur Periode", request.form) 
         output = io.BytesIO()
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            column_fixed.to_excel(writer, index=False, sheet_name='LEMBUR')
+            dt.to_excel(writer, index=False, sheet_name='LEMBUR')
         output.seek(0)
         return send_file(output, as_attachment=True, download_name=filename, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
@@ -713,19 +687,12 @@ def downloadIzinJam():
         data = getDataKaryawan()
         return render_template('Pages/download/izin-jam.html', data = data)
     elif request.method == "POST":
-        data = getDataIzinJamDocument(request.form)
-        if data == []:
-            data_array = np.array([['-','-','-','-','-','-','-','-','-','-']], dtype="str_")
-        else:
-            data_array = np.array(data, dtype="str_")
-        
-        dataframe = pd.DataFrame(data_array, columns=["No", "Tanggal", "Jam Mulai Izin", "Jam Akhir Izin", "Status", "Keterangan Izin", "Kode Karyawan", "Kode Izin Jam", "Total Jam Izin", "Nama"])
-        column_fixed = dataframe[["No", "Tanggal", "Nama", "Status", "Total Jam Izin", "Jam Mulai Izin", "Jam Akhir Izin", "Keterangan Izin"]]
+        dt = izinJamDownloadData(request.form)
         filename = getNamaDokumen("Data Izin Jam Karyawan Periode", request.form)  
         
         output = io.BytesIO()
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            column_fixed.to_excel(writer, index=False, sheet_name='IZIN JAM')
+            dt.to_excel(writer, index=False, sheet_name='IZIN JAM')
         output.seek(0)
         return send_file(output, as_attachment=True, download_name=filename, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
@@ -735,19 +702,11 @@ def downloadIzin():
         data = getDataKaryawan()
         return render_template('Pages/download/izin.html', data = data)
     elif request.method == "POST":
-        data =  getDataIzinDocument(request.form)
-        
-        if data == []:
-            data_array = np.array([['-','-','-','-','-','-','-']], dtype="str_")
-        else:
-            data_array = np.array(data, dtype="str_")
-        
-        dataframe = pd.DataFrame(data_array, columns=["No", "Tanggal", "Status", "Keterangan", "Kode Karyawan", "Kode Izin", "Nama"])
-        column_fixed = dataframe[["No", "Tanggal", "Nama", "Status", "Keterangan"]]
+        dt = izinDownloadData(request.form)
         filename = getNamaDokumen("Data Izin Karyawan Periode", request.form)
         output = io.BytesIO()
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            column_fixed.to_excel(writer, index=False, sheet_name='IZIN')
+            dt.to_excel(writer, index=False, sheet_name='IZIN')
         output.seek(0)
         return send_file(output, as_attachment=True, download_name=filename, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
@@ -757,30 +716,11 @@ def downloadPresensi():
         data = getDataKaryawan()
         return render_template('Pages/download/presensi.html', data = data)
     elif request.method == "POST":
-        data = getDataAbsenDocument(request.form)
+        dt = presensiDownloadData(request.form)
         filename = getNamaDokumen("Data Presensi Periode", request.form)
-
-        dt_length = len(data[0])
-        empty_value = []
-        i = 0
-        while i < dt_length:
-            empty_value.append('-')
-            i+=1
-        
-        if data == []:
-            data_array = np.array(empty_value, dtype="str_")
-        else:
-            data_array = np.array(data, dtype="str_")
-        
-        df = pd.DataFrame(data_array)
-        df.columns = df.iloc[0].values
-        df = df.drop(index=0, axis=0 )
-        df = df.reset_index(drop=True)
-        
-        
         output = io.BytesIO()
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            df.to_excel(writer, index=False, sheet_name='PRESENSI')
+            dt.to_excel(writer, index=False, sheet_name='PRESENSI')
         output.seek(0)
         return send_file(output, as_attachment=True, download_name=filename, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
@@ -790,10 +730,44 @@ def downloadGaji():
         data = getDataKaryawan()
         return render_template('Pages/download/gaji.html', data = data)
     elif request.method == "POST":
-        data = getDataGajiDocument(request.form) 
-        filename = getNamaDokumen("Data Presensi Periode", request.form)
-        print(data)
-        return 'ok'
+        filename = getNamaDokumen("Data Gaji Karyawan Periode", request.form)
+        dt = gajiDownloadData(request.form)
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            dt.to_excel(writer, index=False, sheet_name='GAJI')
+        output.seek(0)
+        return send_file(output, as_attachment=True, download_name=filename, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
+@app.route('/download-data-lengkap', methods=['GET', 'POST'])
+def downloadDataFull():
+    if request.method == "GET":
+        data = getDataKaryawan()
+        return render_template('Pages/download/full.html', data = data)
+    elif request.method == "POST":
+        filename = getNamaDokumen("Data LENGKAP Gaji Karyawan Periode", request.form)
+        
+        dt_gaji = gajiDownloadData(request.form)
+        dt_presensi = presensiDownloadData(request.form)
+        dt_izin = izinDownloadData(request.form)
+        dt_izin_jam = izinJamDownloadData(request.form)
+        dt_lembur = lemburDownloadData(request.form)
+        dt_komplain = komplainDownloadData(request.form)
+        dt_pinjaman_pajak = pinjamanPajakDownloadData(request.form)
+        dt_insentif = insentifDownloadData(request.form)
 
-app.run(port=5000, debug=True)
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            dt_presensi.to_excel(writer, index=False, sheet_name='PRESENSI')
+            dt_izin.to_excel(writer, index=False, sheet_name='IZIN')
+            dt_izin_jam.to_excel(writer, index=False, sheet_name='IZIN JAM')
+            dt_lembur.to_excel(writer, index=False, sheet_name='LEMBUR')
+            dt_pinjaman_pajak.to_excel(writer, index=False, sheet_name='PINJAMAN DAN PAJAK')
+            dt_insentif.to_excel(writer, index=False, sheet_name='INSENTIF')
+            dt_komplain.to_excel(writer, index=False, sheet_name='KOMPLAIN')
+            dt_gaji.to_excel(writer, index=False, sheet_name='GAJI')
+        output.seek(0)
+
+        return send_file(output, as_attachment=True, download_name=filename, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+
+if __name__ == "__main__": 
+    app.run(host="127.0.0.1",port=5000, debug=True)
