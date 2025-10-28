@@ -15,10 +15,11 @@ def getDataAbsen():
     # Move to next month and set day to 10
     if int(datetime.strftime(date_obj, "%d"))>=26:
         start_period = datetime.strftime(date_obj.replace(day=26), "%Y-%m-%d")
+        end_period = datetime.strftime((date_obj + relativedelta(months=1)).replace(day=25), "%Y-%m-%d")
+        
     else:
         start_period = datetime.strftime((date_obj - relativedelta(months=1)).replace(day=26), "%Y-%m-%d")
-    
-    end_period = datetime.strftime(date_obj.replace(day=25), "%Y-%m-%d")
+        end_period = datetime.strftime(date_obj.replace(day=25), "%Y-%m-%d")
     
     cursor = db.cursor()
     cursor.execute("SELECT absensi.*, karyawan.nama FROM absensi JOIN karyawan ON absensi.id_karyawan = karyawan.nik WHERE tanggal BETWEEN '"+str(start_period)+"' AND '"+str(end_period)+"' ORDER BY karyawan.nama ASC")
@@ -41,10 +42,13 @@ def searchDataAbsen(key):
     date_obj = date.today()
 
     # Move to next month and set day to 10
-    start_period = datetime.strftime((date_obj - relativedelta(months=1)).replace(day=26), "%Y-%m-%d")
-    # start_period = "01/07/2025"
-    end_period = datetime.strftime((date_obj + relativedelta(months=1)).replace(day=25), "%Y-%m-%d")
-    # end_period = "10/07/2025"    
+    if int(datetime.strftime(date_obj, "%d"))>=26:
+        start_period = datetime.strftime(date_obj.replace(day=26), "%Y-%m-%d")
+        end_period = datetime.strftime((date_obj + relativedelta(months=1)).replace(day=26), "%Y-%m-%d")
+        
+    else:
+        start_period = datetime.strftime((date_obj - relativedelta(months=1)).replace(day=26), "%Y-%m-%d")
+        end_period = datetime.strftime(date_obj.replace(day=25), "%Y-%m-%d")
     
     cursor = db.cursor()
     cursor.execute("SELECT absensi.*, karyawan.nama FROM absensi JOIN karyawan ON absensi.id_karyawan = karyawan.nik WHERE karyawan.nama LIKE '%"+key+"%' AND tanggal BETWEEN '"+str(start_period)+"' AND '"+str(end_period)+"' ORDER BY karyawan.nama ASC")
@@ -720,6 +724,40 @@ def getDataGajiDocument(data):
                     locale.currency(gaji_bersih, grouping=True),
                 ])
     return data_fix
+
+def getDataBPJS():
+    data = []
+    cur = db.cursor()
+    cur.execute("SELECT nik, nama FROM karyawan")
+    resUser = cur.fetchall()
+    for user in resUser:
+        data.append([
+            user[0],
+            user[1],
+        ])
+    
+    for d in data:
+        cur.execute("SELECT * FROM bpjs WHERE id_karyawan = '"+d[0]+"' and jenis = 'ks'")
+        res = cur.fetchone()
+        if res == None:
+            d.append('-')
+            d.append('-')
+        else:
+            d.append(res[2])
+            d.append(locale.currency(res[3], grouping=True, symbol=False))
+
+            
+        cur.execute("SELECT * FROM bpjs WHERE id_karyawan = '"+d[0]+"' and jenis = 'kt'")
+        res2 = cur.fetchone()
+        if res2 == None:
+            d.append('-')
+            d.append('-')
+        else:
+            d.append(res2[2])
+            d.append(locale.currency(res[3], grouping=True, symbol=False))
+    return data
+
+
 
 def getDateRange(mulai, akhir):
     tanggal_data = []

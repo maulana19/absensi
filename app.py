@@ -10,7 +10,7 @@ from Function.dataDokumenDownload import gajiDownloadData, insentifDownloadData,
 from Function.loadData import *
 from Function.DataKaryawan import getNamaKaryawan, insertJadwal, updateKaryawan
 import locale
-from Function.tambahData import insertLibur, insertIzinJam, insertDataAbsen, insertInsentif, insertIzinKaryawan, insertLembur, insertPotonganLain, insertDataKomplain, insertGajiKaryawan
+from Function.tambahData import insertDataBPJS, insertIzinBatch,insertLemburBatch, insertKomplainBatch, insertLibur, insertIzinJam, insertDataAbsen, insertInsentif, insertIzinKaryawan, insertLembur, insertPotonganLain, insertDataKomplain, insertGajiKaryawan
 from Function.hapusData import deleteInsentif, deleteLibur,deleteIzin, deleteIzinJam, deleteLembur, deletePinjamanPajak, deleteKomplain
 from Function.convertData import changeFormatDate
 from Function.updateData import updateIzin, updateLibur, updateIzinJam, updateDataPinjamanPajak, updateGaji, updateLembur, updateKomplain, updateDataKaryawanBatch,updateInsentif
@@ -514,6 +514,17 @@ def hapusInsentif(id):
     deleteInsentif(id)
     return redirect('/insentif')
 
+@app.route('/bpjs', methods=['GET'])
+def daftarBpjs():
+    dataBPJS = getDataBPJS()
+    data_karyawan = getDataKaryawan()
+    return render_template('/Pages/karyawan/bpjs/list.html', data = dataBPJS, dataKaryawan = data_karyawan)
+@app.route('/bpjs/tambah-baru/', methods=[ 'POST'])
+def tambahBpjs():
+    if request.method == "POST":
+        insertDataBPJS(request.form)
+        return 'ok'
+
 @app.route('/pinjaman-pajak')
 def pinjamanPajak():
     dataPinjaman = getPinjamanPajak()
@@ -613,17 +624,29 @@ def cariKomplain():
     else:
         return redirect('/komplain')
 
-@app.route('/data/gaji-karyawan/download')
-def downloadGajiKaryawan():
-    data = getDataKaryawan()
-    arr = np.array(data, dtype="str_")
-    dataFrame = pd.DataFrame(arr, columns=["NOMOR", "NIK", "NAMA KARYAWAN", "JAM KERJA", "UPAH POKOK", "TUNJANGAN JABATAN", "TUNJANGAN KEAHLIAN", "TUNJAGAN LAIN"])
-    filename = "DataKaryawan.xlsx"
-    output = io.BytesIO()
-    with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        dataFrame.to_excel(writer, index=False, sheet_name='Sheet1')
-    output.seek(0)
-    return send_file(output, as_attachment=True, download_name=filename, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+@app.route('/tambah-izin-batch', methods=['GET', 'POST'])
+def tambahIzinBatch():
+    if request.method == "GET":
+        return render_template('Pages/absen/izin/tambah-batch.html')
+    if request.method == "POST":
+        insertIzinBatch(request.files)
+        return redirect('/izin')
+
+@app.route('/tambah-lembur-batch', methods=['GET', 'POST'])
+def tambahLemburBatch():
+    if request.method == "GET":
+        return render_template('Pages/absen/lembur/tambah-batch.html')
+    if request.method == "POST":
+        insertLemburBatch(request.files)
+        return redirect('/lembur')
+    
+@app.route('/tambah-komplain-batch', methods = ['GET', "POST"])
+def tambahKomplainBatch():
+    if request.method == "GET":
+        return render_template('Pages/karyawan/komplain/tambah-batch.html')
+    if request.method == "POST":
+        insertKomplainBatch(request.files)
+        return redirect('/komplain')
 
 @app.route('/download-komplain', methods = ['GET', 'POST'])
 def downloadKomplain():
@@ -769,5 +792,49 @@ def downloadDataFull():
 
         return send_file(output, as_attachment=True, download_name=filename, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
+@app.route('/data/gaji-karyawan/download')
+def downloadGajiKaryawan():
+    data = getDataKaryawan()
+    arr = np.array(data, dtype="str_")
+    dataFrame = pd.DataFrame(arr, columns=["NOMOR", "NIK", "NAMA KARYAWAN", "JAM KERJA", "UPAH POKOK", "TUNJANGAN JABATAN", "TUNJANGAN KEAHLIAN", "TUNJAGAN LAIN"])
+    filename = "DataKaryawan.xlsx"
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        dataFrame.to_excel(writer, index=False, sheet_name='Sheet1')
+    output.seek(0)
+    return send_file(output, as_attachment=True, download_name=filename, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+
+@app.route('/data/izin/download-form')
+def downloadIzinForm():
+    data_array = np.array([["","","",""]], dtype="str_")
+    dataframe = pd.DataFrame(data_array, columns=['Nama Karyawan', 'Tanggal', 'Status', 'Keterangan'])
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        dataframe.to_excel(writer, index=False, sheet_name='Form Izin')
+    output.seek(0)
+    return send_file(output, as_attachment=True, download_name="Form Izin Batch.xlsx", mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+
+@app.route('/data/lembur/download-form')
+def downloadLemburForm():
+    data_array = np.array([["","",""]], dtype="str_")
+    dataframe = pd.DataFrame(data_array, columns=['Nama Karyawan', 'Tanggal', 'Total Jam Lembur'])
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        dataframe.to_excel(writer, index=False, sheet_name='Form Izin')
+    output.seek(0)
+    return send_file(output, as_attachment=True, download_name="Form Lembur Batch.xlsx", mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+
+@app.route('/data/komplain/download-form')
+def downloadKomplainForm():
+    data_array = np.array([["", "", ""]])
+    dataframe = pd.DataFrame(data_array, columns=['Nama Karyawan', 'Total Komplain', 'Keterangan'])
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        dataframe.to_excel(writer, index=False, sheet_name='Form Komplain')
+    output.seek(0)
+    return send_file(output, as_attachment=True, download_name="Form Komplain Batch.xlsx", mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+
+
+
 if __name__ == "__main__": 
-    app.run(host="127.0.0.1",port=5000, debug=True)
+    app.run(host="0.0.0.0",port=5000, debug=True)

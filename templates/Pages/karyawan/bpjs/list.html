@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block title %}
+BPJS Karyawan
+{% endblock %}
+
+{% block navbar %}
+    <nav class="navbar navbar-light bg-success">
+        <a class="ms-3" style="text-decoration: none;color: white;font-weight: bold;" data-bs-toggle="offcanvas"
+            href="#offcanvasExample" role="button" aria-controls="offcanvasExample">
+            MENU
+        </a>
+        <div class="container">
+            <div class="ms-auto me-0 mt-2">
+                <form action="cari-gaji" method="get">
+                    <div class="input-group mb-2">
+                        <input type="text" class="form-control" name="key" placeholder="Cari Data BPJS" aria-label="Example text with button addon" aria-describedby="button-addon1">
+                        <button class="btn btn-outline-light" type="submit" id="button-addon1"><b>Cari</b></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </nav>
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+            <div class="col-md-12">
+                <div class="card mt-2">
+                    <div class="card-header">
+                        <div class="row">
+                            <div class="col-md-10 mt-2">
+                                <p><b>Daftar BPJS Karyawan </b></p>
+                            </div>
+                            <div class="col-md-2 text-end">
+                                <button type="button" data-bs-toggle="modal" data-bs-target="#tambahBpjsForm" class="btn btn-md btn-success">Tambah BPJS Karyawan</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive ">                                
+                            <table class="table table-hover table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th scope="col" style="vertical-align: middle;"><center>#</center></th>
+                                        <th scope="col" style="vertical-align: middle;"><center>NIK</center></th>
+                                        <th scope="col" style="vertical-align: middle;min-width: 150px;"><center>Nama</center></th>
+                                        <th scope="col" style="vertical-align: middle;width: 250px;"><center>Nomor BPJS Kesehatan</center></th>
+                                        <th scope="col" style="vertical-align: middle;width: 300px;"><center>Potongan BPJS Kesehatan</center></th>
+                                        <th scope="col" style="vertical-align: middle;width: 250px;"><center>Nomor BPJS Ketenagakerjaan</center></th>
+                                        <th scope="col" style="vertical-align: middle;width: 300px;"><center>Potongan BPJS Ketenagakerjaan</center></th>
+                                        <th scope="col" style="vertical-align: middle;"><center>:</center></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% if data %}
+                                        {% for d in data %}
+                                            <tr>
+                                                <td><center>{{ loop.index }}</center></td>
+                                                <td><center>{{ d[0] }}</center></td>
+                                                <td>{{ d[1] }}</td>
+                                                <td><center>{{ d[2] }}</center></td>
+                                                <td>
+                                                    {% if d[3] != '-' %}
+                                                        <div class="row d-flex">
+                                                            <div class="col-md-6">Rp</div>
+                                                            <div class="col-md-6" style="text-align: end;">{{ d[3] }}</div>
+                                                        </div>
+                                                    {% else %}
+                                                        -
+                                                    {% endif %}
+                                                </td>
+                                                <td><center>{{ d[4] }}</center></td>
+                                                <td>{{ d[5] }}</td>
+                                                <td>
+                                                    <div class="btn-group" role="group" aria-label="Basic outlined example">
+                                                        <a href="" class="btn btn-md btn-warning"><b>Edit</b></a>
+                                                        <a href="" class="btn btn-md btn-danger"><b>Hapus</b></a>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="modal fade" id="tambahBpjsForm" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="exampleModalLabel">Tambah BPJS Karyawan </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <form action="/bpjs/tambah-baru/" method="post">
+                                <div class="modal-body">
+                                    <p class="text-muted">Untuk menambahkan BPJS kesehatan dan ketenagakarjaan karyawan silahkan pilih karyawan dulu !</p>
+                                    <input type="text" list="karyawanList" name="no_karyawan" class="form-control mb-2" placeholder="Silahkan Pilih Karyawan">
+                                    <datalist id="karyawanList">
+                                        {% for d in dataKaryawan %}
+                                            <option value="{{d[1]}}-{{d[2]}}">{{ d[1] }} - {{ d[2] }}</option>
+                                        {% endfor %}
+                                    </datalist>
+                                    <input type="number" name="nomor_bpjs_kes" placeholder="Nomor BPJS Kesehatan" id="" class="form-control mb-2">
+                                    <input type="number" name="pot_bpjs_kes" placeholder="Potongan BPJS Kesehatan" id="" class="form-control mb-2">
+                                    <input type="number" name="nomor_bpjs_ket" placeholder="Nomor BPJS Ketenagakerjaan" id="" class="form-control mb-2">
+                                    <input type="number" name="pot_bpjs_ket" placeholder="Potongan BPJS Ketenagakerjaan" id="" class="form-control">
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="submit" class="btn btn-primary">Tambahkan BPJS</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+            </div>
+    </div>
+{% endblock %}
