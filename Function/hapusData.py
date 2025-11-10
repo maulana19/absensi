@@ -46,3 +46,8 @@ def deleteInsentif(id):
     cur = db.cursor()
     cur.execute("DELETE FROM insentif WHERE kode_insentif = '"+str(id)+"'")
     db.commit()
+
+def deleteBPJS(id):
+    cur = db.cursor()
+    cur.execute("DELETE FROM bpjs WHERE id_karyawan = '"+str(id)+"'")
+    db.commit()

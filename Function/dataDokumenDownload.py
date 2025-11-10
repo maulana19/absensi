@@ -1,7 +1,7 @@
 
 import numpy as np
 import pandas as pd
-from Function.loadData import getDataAbsenDocument, getDataGajiDocument, getDataInsentifDocument, getDataIzinDocument, getDataIzinJamDocument, getDataKaryawan, getDataLemburByDate, getDataLemburDocument, getDataPinjamanPajakDocument, getDatakomplainDocument, getDateRange
+from Function.loadData import getDataBPJSDocument, getDataAbsenDocument, getDataGajiDocument, getDataInsentifDocument, getDataIzinDocument, getDataIzinJamDocument, getDataKaryawan, getDataLemburByDate, getDataLemburDocument, getDataPinjamanPajakDocument, getDatakomplainDocument, getDateRange
 from Databases.connect import db
 
 def komplainDownloadData(dt):    
@@ -104,10 +104,24 @@ def presensiDownloadData(dt):
     return df
 
 def gajiDownloadData(dt):
-    data = getDataGajiDocument(dt) 
+    data = getDataGajiDocument(dt)
     if data == []:
-        data_array = np.array(['-','-','-','-','-','-','-','-','-','-','-','-','-','-','-','-','-','-','-','-','-'], dtype="str_")
+        data_array = np.array([['-','-','-','-','-','-','-','-','-','-','-','-','-','-','-','-','-','-','-','-','-','-','-']], dtype="str_")
     else:
         data_array = np.array(data, dtype="str_") 
-    dataframe = pd.DataFrame(data_array, columns=["No", "NIK", "NAMA", "JML HARI KERJA", "IZIN", "CUTI", "SAKIT", "IZIN KHUSUS", "ALPHA", "IZIN BERJAM", "UPAH POKOK", "TUNJANGAN JABATAN", "TUNJANGAN KEAHLIAN", "TUNJANGAN LAIN", "UPAH TOTAL", "LEMBUR", "INSENTIF", "GAJI KOTOR", "POT. IZIN", "POT. IZIN PERJAM", "POT. PAJAK", "POT. PINJAMAN", "KOMPLAIN", "GAJI BERSIH"])
+    dataframe = pd.DataFrame(data_array, columns=["No", "NIK", "NAMA", "JML HARI KERJA", "IZIN", "CUTI", "SAKIT", "IZIN KHUSUS", "ALPHA", "IZIN BERJAM", "UPAH POKOK", "TUNJANGAN JABATAN", "TUNJANGAN KEAHLIAN", "TUNJANGAN LAIN", "UPAH TOTAL", "LEMBUR", "INSENTIF", "GAJI KOTOR", "POT. BPJS KESEHATAN", "POT. BPJS KETENAGAKERJAAN",  "POT. IZIN", "POT. IZIN PERJAM", "POT. PAJAK", "POT. PINJAMAN", "KOMPLAIN", "GAJI BERSIH"])
+    print(dataframe)
     return dataframe
+
+def bpjsDownloadData(dt): 
+    data = getDataBPJSDocument(dt)
+    if data == []:
+        data_array = np.array([['-', '-', '-', '-', '-', '-']])
+    else:
+        data_array = np.array(data, dtype="str_")
+    print(data_array)
+    dataframe = pd.DataFrame(data_array, columns=["NIK", "Nama", "Nomor BPJS Kesehatan", "Potongan BPJS Kesehatan", "Nomor BPJS Ketenagakerjaan", "Potongan BPJS Ketenagakerjaan"])
+    return dataframe
+
+def slipDownloadData(dt):
+    return 'ok'

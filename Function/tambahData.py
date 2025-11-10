@@ -226,8 +226,18 @@ def insertGajiKaryawan(data):
     cur.close()
     
 def insertDataBPJS(data):
-    print(data)
-    return 'K'
+    cur = db.cursor()
+    cur.execute("SELECT * FROM bpjs WHERE id_karyawan = '"+data["no_karyawan"].split('-')[0]+"' and jenis = 'ks'")
+    res_ks = cur.fetchone()
+    if res_ks == None:
+        cur.execute("INSERT INTO bpjs(jenis, nomor, jumlah, id_karyawan) VALUES ('ks', '"+data['nomor_bpjs_kes']+"', '"+data['pot_bpjs_kes']+"', '"+data["no_karyawan"].split('-')[0]+"')")
+        db.commit()
+    cur.execute("SELECT * FROM bpjs WHERE id_karyawan = '"+data["no_karyawan"].split('-')[0]+"' and jenis = 'kt'")
+    res_kt = cur.fetchone()
+    if res_kt == None:
+        cur.execute("INSERT INTO bpjs(jenis, nomor, jumlah, id_karyawan) VALUES ('kt', '"+data['nomor_bpjs_ket']+"', '"+data['pot_bpjs_ket']+"', '"+data["no_karyawan"].split('-')[0]+"')")
+        db.commit()
+    cur.close()
 
 def insertIzinBatch(data):
     d_excel = pd.read_excel(data['file-izin'], dtype="str_")
@@ -286,6 +296,33 @@ def insertLemburBatch(data):
                 cur.execute("INSERT INTO lembur(tanggal, total_jam, id_karyawan, kode_lembur) VALUES ('"+d[1].split(" ")[0]+"', '"+d[2]+"', '"+userRes[0]+"', '"+kode_lembur+"')")
                 db.commit()
     cur.close()
+
+def insertBpjsBatch(data):
+    d_excel = pd.read_excel(data['file-bpjs'], dtype="str_")
+    lst = d_excel.values.tolist()
+    cur = db.cursor()
+    for d in lst:
+        cur.execute("SELECT nik, nama FROM karyawan WHERE nama LIKE '%"+d[0]+"%' LIMIT 1")
+        resUser = cur.fetchone()
+        if resUser:
+            cur.execute("SELECT * FROM bpjs WHERE id_karyawan = '"+resUser[0]+"' and jenis = 'ks' LIMIT 1")
+            resKs = cur.fetchone()
+            if resKs == None:
+                cur.execute("INSERT INTO bpjs(jenis, nomor, jumlah, id_karyawan) VALUES ('ks', '"+d[1]+"', '"+d[2]+"', '"+resUser[0]+"')")
+            else:
+                cur.execute('UPDATE bpjs SET nomor = "'+d[1]+'", jumlah = "'+d[2]+'" WHERE id_karyawan = "'+resUser[0]+'" AND jenis = "ks"')
+            db.commit()
+
+            cur.execute("SELECT * FROM bpjs WHERE id_karyawan = '"+resUser[0]+"' and jenis = 'kt' LIMIT 1")
+            resKt = cur.fetchone()
+            if resKt == None:
+                cur.execute("INSERT INTO bpjs(jenis, nomor, jumlah, id_karyawan) VALUES ('kt', '"+d[3]+"', '"+d[4]+"', '"+resUser[0]+"')")
+            else:
+                cur.execute('UPDATE bpjs SET nomor = "'+d[3]+'", jumlah = "'+d[4]+'" WHERE id_karyawan = "'+resUser[0]+'" AND jenis = "kt"')
+            db.commit()
+    cur.close()
+
+
 def insertKomplainBatch(data):
     d_excel = pd.read_excel(data['file-komplain'], dtype="str_")
     lst = d_excel.values.tolist()

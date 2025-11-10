@@ -6,14 +6,14 @@ import os
 import waitress
 
 from Databases.connect import db
-from Function.dataDokumenDownload import gajiDownloadData, insentifDownloadData, izinDownloadData, izinJamDownloadData, komplainDownloadData, lemburDownloadData, pinjamanPajakDownloadData, presensiDownloadData
+from Function.dataDokumenDownload import bpjsDownloadData, gajiDownloadData, insentifDownloadData, izinDownloadData, izinJamDownloadData, komplainDownloadData, lemburDownloadData, pinjamanPajakDownloadData, presensiDownloadData,slipDownloadData
 from Function.loadData import *
 from Function.DataKaryawan import getNamaKaryawan, insertJadwal, updateKaryawan
 import locale
-from Function.tambahData import insertDataBPJS, insertIzinBatch,insertLemburBatch, insertKomplainBatch, insertLibur, insertIzinJam, insertDataAbsen, insertInsentif, insertIzinKaryawan, insertLembur, insertPotonganLain, insertDataKomplain, insertGajiKaryawan
-from Function.hapusData import deleteInsentif, deleteLibur,deleteIzin, deleteIzinJam, deleteLembur, deletePinjamanPajak, deleteKomplain
+from Function.tambahData import insertBpjsBatch, insertDataBPJS, insertIzinBatch,insertLemburBatch, insertKomplainBatch, insertLibur, insertIzinJam, insertDataAbsen, insertInsentif, insertIzinKaryawan, insertLembur, insertPotonganLain, insertDataKomplain, insertGajiKaryawan
+from Function.hapusData import deleteBPJS, deleteInsentif, deleteLibur,deleteIzin, deleteIzinJam, deleteLembur, deletePinjamanPajak, deleteKomplain
 from Function.convertData import changeFormatDate
-from Function.updateData import updateIzin, updateLibur, updateIzinJam, updateDataPinjamanPajak, updateGaji, updateLembur, updateKomplain, updateDataKaryawanBatch,updateInsentif
+from Function.updateData import updateBpjs, updateIzin, updateLibur, updateIzinJam, updateDataPinjamanPajak, updateGaji, updateLembur, updateKomplain, updateDataKaryawanBatch,updateInsentif
 
 # from Function.tambahAbsensiKaryawanShift import insertDataKaryawanShift
 
@@ -281,9 +281,25 @@ def cariIzinJam():
 
 @app.route('/lembur')
 def daftarLembur():
+    # Parse into datetime object
+    date_obj = date.today()
+
+    # Move to next month and set day to 10
+    if int(datetime.strftime(date_obj, "%d"))>=26:
+        start_period = datetime.strftime(date_obj.replace(day=26), "%Y-%m-%d")
+        end_period = datetime.strftime((date_obj + relativedelta(months=1)).replace(day=25), "%Y-%m-%d")
+        
+    else:
+        start_period = datetime.strftime((date_obj - relativedelta(months=1)).replace(day=26), "%Y-%m-%d")
+        end_period = datetime.strftime(date_obj.replace(day=25), "%Y-%m-%d")
+        
+    tanggal = getDateRange(start_period, end_period)
     data_lembur = getDataLembur()
     data_karyawan = getDataKaryawan()
-    return render_template("Pages/absen/lembur/list.html", data = data_lembur, karyawan = data_karyawan)
+    data_lembur = lemburDownloadData({'mulai' : start_period, 'akhir': end_period})
+    data_header = ['No', 'NIK', 'KARYAWAN']+tanggal
+    print(data_lembur.to_numpy())
+    return render_template("Pages/absen/lembur/list.html", data = data_lembur.to_numpy(), karyawan = data_karyawan, header = data_header, data_len = len(data_header))
 
 @app.route('/tambah-lembur', methods =['GET', 'POST'])
 def tambahLembur():
@@ -354,7 +370,9 @@ def gajikaryawan():
             potonganIzinJam = (int(upah_total)/25)/7 * (int(totalizinperjam))
             potonganPajak = int(getPajak(d[1])[0])
             potonganPinjaman = int(getPinjaman(d[1], tanggal)[0])
-
+            potonganBPJS = searchBPJSbyNIK(d[1])
+            potonganBPJSKesehatan = potonganBPJS[3]
+            potonganBPJSKetenagakerjaan = potonganBPJS[5]
             komplain = getDataKomplainByName(d[1], tanggal)
             
             gaji_bersih = int(gajiKotor) - int(potonganIzin) - int(potonganIzinJam) - int(potonganPajak) - int(potonganPinjaman) + komplain
@@ -371,6 +389,8 @@ def gajikaryawan():
                     locale.currency(lembur, grouping=True),
                     locale.currency(insentif, grouping=True),
                     locale.currency(gajiKotor, grouping=True),
+                    locale.currency(potonganBPJSKesehatan if potonganBPJSKesehatan != '-' else 0, grouping=True),
+                    locale.currency(potonganBPJSKetenagakerjaan if potonganBPJSKetenagakerjaan != '-' else 0, grouping=True),
                     locale.currency(potonganIzin, grouping=True),
                     locale.currency(potonganIzinJam, grouping=True),
                     locale.currency(potonganPajak, grouping=True),
@@ -388,7 +408,6 @@ def searchGaji():
     tanggal = []
     for t in tanggal_header:
         tanggal.append(datetime.strftime(t, "%Y-%m-%d"))
-    tanggal_sekarang = datetime.now()
     totalharilibur = hitungHariLibur(tanggal)
 
     if request.args.get('key') != "":
@@ -418,9 +437,12 @@ def searchGaji():
                 potonganIzinJam = (int(upah_total)/25)/7 * (int(totalizinperjam))
 
                 potonganPajak = int(getPajak(d[1])[0])
-                potonganPinjaman = int(getPinjaman(d[1], tanggal_sekarang)[0])
+                potonganPinjaman = int(getPinjaman(d[1], tanggal)[0])
+                potonganBPJS = searchBPJSbyNIK(d[1])
+                potonganBPJSKesehatan = potonganBPJS[3]
+                potonganBPJSKetenagakerjaan = potonganBPJS[5]
 
-                komplain = getDataKomplainByName(d[1], tanggal_sekarang)
+                komplain = getDataKomplainByName(d[1], tanggal)
                 
                 gaji_bersih = int(gajiKotor) - int(potonganIzin) - int(potonganIzinJam) - int(potonganPajak) - int(potonganPinjaman) + komplain
                 data.append(
@@ -436,6 +458,8 @@ def searchGaji():
                         locale.currency(lembur*15897, grouping=True),
                         locale.currency(insentif, grouping=True),
                         locale.currency(gajiKotor, grouping=True),
+                        locale.currency(potonganBPJSKesehatan if potonganBPJSKesehatan != '-' else 0, grouping=True),
+                        locale.currency(potonganBPJSKetenagakerjaan if potonganBPJSKetenagakerjaan != '-' else 0, grouping=True),
                         locale.currency(potonganIzin, grouping=True),
                         locale.currency(potonganIzinJam, grouping=True),
                         locale.currency(potonganPajak, grouping=True),
@@ -519,11 +543,32 @@ def daftarBpjs():
     dataBPJS = getDataBPJS()
     data_karyawan = getDataKaryawan()
     return render_template('/Pages/karyawan/bpjs/list.html', data = dataBPJS, dataKaryawan = data_karyawan)
+
 @app.route('/bpjs/tambah-baru/', methods=[ 'POST'])
 def tambahBpjs():
     if request.method == "POST":
         insertDataBPJS(request.form)
-        return 'ok'
+        return redirect('/bpjs')
+    
+@app.route('/ubah-bpjs/<user_id>', methods= ["GET", 'POST'])
+def ubahBpjs(user_id):
+    if request.method == "GET":
+        dataBPJS = searchBPJSbyNIK(user_id)
+        return render_template('/Pages/karyawan/bpjs/edit.html', data = dataBPJS)
+    if request.method =="POST":
+         updateBpjs(request.form, user_id)
+         return redirect('/bpjs')
+
+@app.route('/hapus-bpjs/<user_id>', methods= ['GET', 'POST'])
+def hapusBPJS(user_id):
+    deleteBPJS(user_id)
+    return redirect('/bpjs')
+
+@app.route('/cari-bpjs', methods= ['GET'])
+def searchBPJS(): 
+    dataBpjs = searchBPJSbyName(request.args.get('key'))
+    data_karyawan = getDataKaryawan()
+    return render_template('/Pages/karyawan/bpjs/list.html', data = dataBpjs, dataKaryawan = data_karyawan)
 
 @app.route('/pinjaman-pajak')
 def pinjamanPajak():
@@ -639,7 +684,15 @@ def tambahLemburBatch():
     if request.method == "POST":
         insertLemburBatch(request.files)
         return redirect('/lembur')
-    
+
+@app.route('/tambah-bpjs-batch', methods = ['GET', 'POST'])
+def tambahBpjsBatch():
+    if request.method == 'GET':
+        return render_template('/Pages/karyawan/bpjs/tambah-batch.html')
+    if request.method == 'POST':
+        insertBpjsBatch(request.files)
+        return redirect('/bpjs')
+
 @app.route('/tambah-komplain-batch', methods = ['GET', "POST"])
 def tambahKomplainBatch():
     if request.method == "GET":
@@ -647,6 +700,24 @@ def tambahKomplainBatch():
     if request.method == "POST":
         insertKomplainBatch(request.files)
         return redirect('/komplain')
+
+
+# Belum Membuat funciton terkait post nya
+@app.route('/download-slip', methods=['GET', 'POST'])
+def downloadSlip():
+    if request.method == "GET":
+        data = getDataKaryawan()
+        return render_template('Pages/download/slip.html', data = data)
+    elif request.method == "POST":
+        dt = slipDownloadData(request.form)
+        filename = getNamaDokumen('Data Komplain Periode', request.form)
+        print(dt)
+        return 'ok'
+        # output = io.BytesIO()
+        # with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        #     dt.to_excel(writer, index=False, sheet_name='Sheet1')
+        # output.seek(0)
+        # return send_file(output, as_attachment=True, download_name=filename, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
 @app.route('/download-komplain', methods = ['GET', 'POST'])
 def downloadKomplain():
@@ -703,6 +774,23 @@ def downloadLembur():
             dt.to_excel(writer, index=False, sheet_name='LEMBUR')
         output.seek(0)
         return send_file(output, as_attachment=True, download_name=filename, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+
+@app.route('/download-bpjs', methods= ['GET', 'POST'])
+def downloadBpjs():
+    if request.method == "GET":
+        data = getDataKaryawan()
+        return render_template('/Pages/download/bpjs.html', data = data)
+    if request.method == "POST":
+        dt = bpjsDownloadData(request.form)
+        if 'semuaData' in request.form and request.form['semuaData'] == "on":
+            namaFile = "Data BPJS Karyawan | Semua Karyawan.xlsx"
+        elif 'no_karyawan' in request.form and request.form['no_karyawan'] != "":
+            namaFile = "Data BPJS Karyawan | "+request.form['no_karyawan'].split('-')[1]+".xlsx"
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            dt.to_excel(writer, index=False, sheet_name='BPJS')
+        output.seek(0)
+        return send_file(output, as_attachment=True, download_name=namaFile, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
 @app.route('/download-izin-jam', methods=['GET', 'POST'])
 def downloadIzinJam():
@@ -777,6 +865,7 @@ def downloadDataFull():
         dt_komplain = komplainDownloadData(request.form)
         dt_pinjaman_pajak = pinjamanPajakDownloadData(request.form)
         dt_insentif = insentifDownloadData(request.form)
+        dt_bpjs = bpjsDownloadData(request.form)
 
         output = io.BytesIO()
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
@@ -787,6 +876,7 @@ def downloadDataFull():
             dt_pinjaman_pajak.to_excel(writer, index=False, sheet_name='PINJAMAN DAN PAJAK')
             dt_insentif.to_excel(writer, index=False, sheet_name='INSENTIF')
             dt_komplain.to_excel(writer, index=False, sheet_name='KOMPLAIN')
+            dt_bpjs.to_excel(writer, index=False, sheet_name='BPJS')
             dt_gaji.to_excel(writer, index=False, sheet_name='GAJI')
         output.seek(0)
 
@@ -795,7 +885,7 @@ def downloadDataFull():
 @app.route('/data/gaji-karyawan/download')
 def downloadGajiKaryawan():
     data = getDataKaryawan()
-    arr = np.array(data, dtype="str_")
+    arr = np.array(data, dtype="    ")
     dataFrame = pd.DataFrame(arr, columns=["NOMOR", "NIK", "NAMA KARYAWAN", "JAM KERJA", "UPAH POKOK", "TUNJANGAN JABATAN", "TUNJANGAN KEAHLIAN", "TUNJAGAN LAIN"])
     filename = "DataKaryawan.xlsx"
     output = io.BytesIO()
@@ -820,9 +910,19 @@ def downloadLemburForm():
     dataframe = pd.DataFrame(data_array, columns=['Nama Karyawan', 'Tanggal', 'Total Jam Lembur'])
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        dataframe.to_excel(writer, index=False, sheet_name='Form Izin')
+        dataframe.to_excel(writer, index=False, sheet_name='Form Lembur')
     output.seek(0)
     return send_file(output, as_attachment=True, download_name="Form Lembur Batch.xlsx", mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+
+@app.route('/data/bpjs/download-form')
+def downloadBpjsForm():
+    data_array = np.array([["","","","",""]], dtype="str_")
+    dataframe = pd.DataFrame(data_array, columns=['Nama Karyawan', 'Nomor BPJS Kesehatan', 'Potongan BPJS Kesehatan', 'Nomor BPJS Ketenagakerjaan', 'Potongan BPJS Ketenagakerjaan'])
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        dataframe.to_excel(writer, index=False, sheet_name='Form BPJS')
+    output.seek(0)
+    return send_file(output, as_attachment=True, download_name="Form BPJS Batch.xlsx", mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
 @app.route('/data/komplain/download-form')
 def downloadKomplainForm():

@@ -85,6 +85,7 @@
                                 <li><a href="/tambah-absen" class="nav-link  {{ 'aktif' if request.path == '/tambah-absen' }} link-dark rounded">Tambah Absensi</a></li>
                                 <li><a href="/tambah-izin-batch" class="nav-link {{ 'aktif' if request.path == '/tambah-izin-batch' }} link-dark rounded">Tambah Izin</a></li>
                                 <li><a href="/tambah-lembur-batch" class="nav-link {{ 'aktif' if request.path == '/tambah-izin-jam-batch' }} link-dark rounded">Tambah Lembur</a></li>
+                                <li><a href="/tambah-bpjs-batch" class="nav-link {{ 'aktif' if request.path == '/tambah-bpjs-batch' }} link-dark rounded">Tambah BPJS</a></li>
                                 <li><a href="/tambah-komplain-batch" class="nav-link {{ 'aktif' if request.path == '/tambah-komplain-batch' }} link-dark rounded">Tambah Komplain</a></li>
                                 <li><a href="/tambah-gaji" class="nav-link {{ 'aktif' if request.path == '/tambah-gaji' }} link-dark rounded">Tambah Gaji</a></li>
                             
@@ -103,10 +104,12 @@
                                 <li><a href="/download-presensi" class="nav-link link-dark rounded">Download Presensi</a></li>
                                 <li><a href="/download-izin" class="nav-link link-dark rounded">Download Izin</a></li>
                                 <li><a href="/download-izin-jam" class="nav-link link-dark rounded">Download Izin Jam</a></li>
-                                <li><a href="/download-lembur" class="nav-link link-dark rounded">Download Lembur</a></li>
+                                <li><a href="/download-lembur" class="nav-link l ink-dark rounded">Download Lembur</a></li>
+                                <li><a href="/download-bpjs" class="nav-link link-dark rounded">Download BPJS</a></li>
                                 <li><a href="/download-insentif" class="nav-link link-dark rounded">Download Insentif</a></li>
                                 <li><a href="/download-pinjaman-pajak" class="nav-link link-dark rounded">Download Pinjaman dan Pajak Karyawan</a></li>
                                 <li><a href="/download-komplain" class="nav-link link-dark rounded">Download Komplain Karyawan</a></li>
+                                <li><a href="/download-slip" class="nav-link link-dark rounded">Download Slip Gaji Karyawan</a></li>
                             </ul>
                         </div>
                     </li>
@@ -147,7 +150,7 @@
             }
         </script>
     {% endif %}
-    {% if  request.path == "/download-komplain" or '/download-pinjaman-pajak' or '/download-insentif' or '/download-lembur' or '/download-izin-jam' or '/download-izin' %}
+    {% if  request.path == "/download-komplain" or '/download-pinjaman-pajak' or '/download-insentif' or '/download-lembur' or '/download-izin-jam' or '/download-izin' or '/download-bpjs' %}
         <script>
             allData = document.getElementById("allData")
             hideElement = document.getElementById("hide")

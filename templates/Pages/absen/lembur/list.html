@@ -24,6 +24,7 @@
 {% endblock %}
 
 {% block content %}
+{% if request.path == '/cari-lembur' %}
     <div class="row">
             <div class="col-md-12">
                 <div class="card mt-2">
@@ -82,6 +83,53 @@
                 </div>
             </div>
     </div>
+{% else %}
+    <div class="row">
+            <div class="col-md-12">
+                <div class="card mt-2">
+                    <div class="card-header">
+                        <div class="row">
+                            <div class="col-md-9 pt-2">
+                                <p><b>Daftar Lembur Karyawan</b></p>
+                            </div>
+                            <div class="col-md-3 text-end">
+                                <button type="button" class="btn btn-md btn-success" data-bs-toggle="modal" data-bs-target="#exampleModal">Tambah Data Lembur</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr style="vertical-align: middle;">
+                                        {% for h in header %}
+                                            {% if loop.index == 3 %}
+                                                <th style="min-width: 300px;">{{ h }}</th>
+                                            {% else %}
+                                                <th> {{ h }}</th>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                        {% for d in data %}
+                                            <tr>
+                                                <td>{{ loop.index }}</td>
+                                                <td> {{ d[1] }} </td>
+                                                <td> {{ d[2] }} </td>
+                                                {% for i in range(3,data_len) %}
+                                                    <td style="vertical-align: middle;text-align: center;">{{ d[i] }}</td>
+                                                {% endfor %}
+                                            </tr>
+                                        {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </div>
+{% endif %}
     
      <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">

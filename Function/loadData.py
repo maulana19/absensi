@@ -660,6 +660,13 @@ def getDataIzinDocument(data):
 
     return datares
 
+def getDataBPJSDocument(data):
+    if 'semuaData' in data and data['semuaData'] == "on":
+        dtBpjs = getDataBPJS()
+    elif 'no_karyawan' in data and data['no_karyawan'] != "":
+        dtBpjs = [searchBPJSbyNIK(data['no_karyawan'].split('-')[0])]
+    return dtBpjs
+
 def getDataAbsenDocument(data):
     tanggal_data = getDateRange(data['mulai'], data['akhir'])
     if 'semuaData' in data and data['semuaData'] == "on":
@@ -694,6 +701,9 @@ def getDataGajiDocument(data):
 
             lembur = getJamLembur(d[1])*15897
             insentif = getTotalnsentif(d[1])
+            potonganBPJS = searchBPJSbyNIK(d[1])
+            potonganBPJSKesehatan = potonganBPJS[3]
+            potonganBPJSKetenagakerjaan = potonganBPJS[5]
             
             gajiKotor= upah_total+lembur+insentif
             totalizinperjam = hitungIzinJam(d[1])
@@ -716,6 +726,8 @@ def getDataGajiDocument(data):
                     locale.currency(lembur, grouping=True),
                     locale.currency(insentif, grouping=True),
                     locale.currency(gajiKotor, grouping=True),
+                    locale.currency(potonganBPJSKesehatan if potonganBPJSKesehatan != '-' else 0, grouping=True),
+                    locale.currency(potonganBPJSKetenagakerjaan if potonganBPJSKetenagakerjaan != '-' else 0, grouping=True),
                     locale.currency(potonganIzin, grouping=True),
                     locale.currency(potonganIzinJam, grouping=True),
                     locale.currency(potonganPajak, grouping=True),
@@ -727,7 +739,7 @@ def getDataGajiDocument(data):
 
 def getDataBPJS():
     data = []
-    cur = db.cursor()
+    cur = db.cursor(buffered=True)
     cur.execute("SELECT nik, nama FROM karyawan")
     resUser = cur.fetchall()
     for user in resUser:
@@ -735,7 +747,6 @@ def getDataBPJS():
             user[0],
             user[1],
         ])
-    
     for d in data:
         cur.execute("SELECT * FROM bpjs WHERE id_karyawan = '"+d[0]+"' and jenis = 'ks'")
         res = cur.fetchone()
@@ -744,7 +755,7 @@ def getDataBPJS():
             d.append('-')
         else:
             d.append(res[2])
-            d.append(locale.currency(res[3], grouping=True, symbol=False))
+            d.append(locale.currency(int(res[3]), grouping=True, symbol=False))
 
             
         cur.execute("SELECT * FROM bpjs WHERE id_karyawan = '"+d[0]+"' and jenis = 'kt'")
@@ -754,10 +765,71 @@ def getDataBPJS():
             d.append('-')
         else:
             d.append(res2[2])
-            d.append(locale.currency(res[3], grouping=True, symbol=False))
+            d.append(locale.currency(int(res2[3]), grouping=True, symbol=False))
     return data
 
+    
+def searchBPJSbyNIK(nik):
+    data = []
+    cur = db.cursor()
 
+    cur.execute("SELECT nik,nama FROM karyawan where nik = '"+str(nik)+"'")
+    dt = cur.fetchone()
+    
+    data.append(dt[0])
+    data.append(dt[1])
+    if dt:
+        cur.execute("SELECT * FROM bpjs WHERE id_karyawan = '"+dt[0]+"' and jenis = 'ks'")
+        res = cur.fetchone()
+        if res == None:
+            data.append('-')
+            data.append('-')
+        else:
+            data.append(res[2])
+            data.append(int(res[3]))
+
+            
+        cur.execute("SELECT * FROM bpjs WHERE id_karyawan = '"+dt[0]+"' and jenis = 'kt'")
+        res2 = cur.fetchone()
+        if res2 == None:
+            data.append('-')
+            data.append('-')
+        else:
+            data.append(res2[2])
+            data.append(int(res[3]))
+
+    return data
+def searchBPJSbyName(nama):
+    data = []
+    cur = db.cursor()
+
+    cur.execute("SELECT nik,nama FROM karyawan where nama LIKE '%"+str(nama)+"%'")
+    dt = cur.fetchall()
+    for user in dt:
+        data.append([
+            user[0],
+            user[1],
+        ])
+    for d in data:
+        cur.execute("SELECT * FROM bpjs WHERE id_karyawan = '"+d[0]+"' and jenis = 'ks'")
+        res = cur.fetchone()
+        if res == None:
+            d.append('-')
+            d.append('-')
+        else:
+            d.append(res[2])
+            d.append(locale.currency(int(res[3]), grouping=True, symbol=False))
+
+            
+        cur.execute("SELECT * FROM bpjs WHERE id_karyawan = '"+d[0]+"' and jenis = 'kt'")
+        res2 = cur.fetchone()
+        if res2 == None:
+            d.append('-')
+            d.append('-')
+        else:
+            d.append(res2[2])
+            d.append(locale.currency(int(res2[3]), grouping=True, symbol=False))
+    return data
 
 def getDateRange(mulai, akhir):
     tanggal_data = []

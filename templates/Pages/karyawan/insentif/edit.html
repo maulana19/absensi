@@ -24,7 +24,7 @@
                 <div class="col-md-4">
                     <div>
                         <h6><b>Karyawan</b></h6>
-                        <input type="text" list="karyawanList" value="{{ di[1] }}-{{ di[0] }}" name="no_karyawan" class="form-control" placeholder="Silahkan Pilih Karyawan yang Izin">
+                        <input type="text" list="karyawanList" readonly value="{{ di[1] }}-{{ di[0] }}" name="no_karyawan" class="form-control" placeholder="Silahkan Pilih Karyawan yang Izin">
                         <datalist id="karyawanList">
                             {% for d in data %}
                                 <option value="{{ d[1] }}-{{ d[2] }}">{{ d[1] }} - {{ d[2] }}</option>

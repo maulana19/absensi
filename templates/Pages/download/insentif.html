@@ -38,7 +38,7 @@
                             </div>
                         </div>
                         <div class="col-md-6" id="hide">
-                            <input type="text" onchange="isSelectAllData()" id="karyawan" list="karyawanList" name="no_karyawan" class="form-control" placeholder="Silahkan Pilih Karyawan yang Izin">
+                            <input type="text" onchange="isSelectAllData()" id="karyawan" list="karyawanList" name="no_karyawan" class="form-control" placeholder="Silahkan Pilih Karyawan">
                             <datalist id="karyawanList">
                                 {% for d in data %}
                                     <option value="{{ d[1] }}-{{ d[2] }}">{{ d[1] }} - {{ d[2] }}</option>

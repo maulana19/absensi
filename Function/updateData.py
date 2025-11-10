@@ -1,3 +1,4 @@
+import locale
 from Databases.connect import db
 import pandas as pd
 
@@ -8,38 +9,45 @@ def updateLibur(value, column, uid):
     cur = db.cursor()
     cur.execute("UPDATE libur SET "+column+" = '"+value+"' WHERE kode_libur = '"+uid+"'")
     db.commit()
+    cur.close()
 
 
 def updateIzin(value,column,  id):
     cur = db.cursor()
     cur.execute("UPDATE izin SET "+column+" = '"+value+"' WHERE kode_izin = '"+id+"'")
     db.commit()
+    cur.close()
 
 def updateIzinJam(value,column,  id):
     cur = db.cursor()
     cur.execute("UPDATE izin_jam SET "+column+" = '"+value+"' WHERE kode_izin_jam = '"+id+"'")
     db.commit()
+    cur.close()
 
 def updateGaji(value, column, id):
     cur = db.cursor()
     cur.execute("UPDATE karyawan SET "+column+" = '"+value+"' WHERE nik = '"+id+"'")
     db.commit()
+    cur.close()
 
 
 def updateLembur(value, column, id):
     cur = db.cursor()
     cur.execute("UPDATE lembur SET "+column+" = '"+value+"' WHERE kode_lembur = '"+id+"'")
     db.commit()
+    cur.close()
 
 def updateDataPinjamanPajak(value, column, id):
     cur = db.cursor()
     cur.execute("UPDATE pinjaman_pajak SET "+column+"= '"+value+"' WHERE kode_potongan_lain = '"+id+"'")
     db.commit()
+    cur.close()
 
 def updateKomplain(value, column, id):
     cur = db.cursor()
     cur.execute("UPDATE komplain SET "+column+"= '"+value+"' WHERE kode_komplain = '"+id+"'")
     db.commit()
+    cur.close()
 
 def updateDataKaryawanBatch(data):
     d_excel = pd.read_excel(data['file-karyawan'], dtype="str_", usecols="A:C")
@@ -81,6 +89,7 @@ def updateDataKaryawanBatch(data):
         cur.execute("UPDATE absensi SET id_karyawan = '"+str(nb[1])+"' WHERE id_karyawan = '"+str(nb[0])+"'")
         cur.execute("UPDATE karyawan SET nik='"+str(nb[1])+"' WHERE nik = '"+str(nb[0])+"'")
         db.commit()    
+    cur.close()
 
 def updateInsentif(data, id):
     dataInsentif = getInsentifById(id)
@@ -102,3 +111,15 @@ def updateInsentif(data, id):
     if data['insentif'] != "":
         if dataInsentif[7] != data['insentif']:
             cur.execute("UPDATE insentif SET insentif = '"+str(data['insentif'])+"' WHERE kode_insentif = '"+str(id)+"'")
+    db.commit()
+    cur.close()
+
+def updateBpjs(data, id):
+    cur = db.cursor()
+    if data['no_kes'] and data['pot_kes'] != '':
+        cur.execute('UPDATE bpjs SET nomor = "'+data['no_kes']+'", jumlah = "'+data['pot_kes']+'" WHERE id_karyawan = "'+id+'" AND jenis = "ks"')
+        db.commit()
+    if data['no_ket'] and data['pot_ket'] != '':
+        cur.execute('UPDATE bpjs SET nomor = "'+data['no_ket']+'", jumlah = "'+data['pot_ket']+'" WHERE id_karyawan = "'+id+'" AND jenis = "kt"')
+        db.commit()
+    cur.close()

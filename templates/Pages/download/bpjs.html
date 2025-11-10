@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}
-    Download Data Izin karyawan
+    Download Data BPJS Karyawan
 {% endblock %}
 
 {% block navbar %}
@@ -16,18 +16,10 @@
 
 {% block content %}
     <div class="card mt-3">
-        <form action="/download-izin" method="post" class=" mt-1 ms-3 mb-3">
+        <form action="/download-bpjs" method="post" class=" mt-1 ms-3 mb-3">
             <div class="row">
-                <div class="col-md-3">
-                    <h6><b>Tanggal Mulai</b></h6>
-                    <input type="date" name="mulai" required class="form-control" id="">
-                </div>
-                <div class="col-md-3">
-                    <h6><b>Tanggal Akhir</b></h6>
-                    <input type="date" name="akhir" required class="form-control" id="">
-                </div>
                 <div class="col-md-6">
-                    <h6><b>Data yang Ditampilkan</b></h6>
+                    <h6><b>Data yang akan diunduh</b></h6>
                     <div class="row"> 
                         <div class="col-md-3 mt-1"> 
                             <div class="form-check">
